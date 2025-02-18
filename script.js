@@ -1116,7 +1116,7 @@ function loadInitialData() {
     }
 
     async function initDBAndLoad() {
-    db = await initSqlJs({ wasmUrl: 'sql-wasm.wasm' }); // Adjust path if needed
+    db = await initSqlJs({ wasmUrl: 'https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.wasm' }); // Using CDN for wasmUrl
     initDatabaseSchema();
     loadInitialData(); // This will also load songs from DB and update UI
 
