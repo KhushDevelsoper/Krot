@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-js@latest/sqlite-js.js"></script>
     <style>
-        /* Inlined CSS - style.css content */
+        /* Inlined CSS - style.css content (same as before, with minor adjustments) */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -41,7 +41,7 @@
             color: #fff;
             border: 1px solid #555;
             padding: 0.7em 1.2em;
-            margin-left: 1em;
+            margin-left: 0.5em; /* Reduced margin */
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s, color 0.3s, border-color 0.3s;
@@ -73,17 +73,17 @@
             padding-bottom: 0.5em;
         }
 
-        #artist-list, #song-list, #unverified-companies-list, #company-artists-list {
+        #artist-list, #song-list, #unverified-companies-list, #company-artists-list, #pending-company-profiles-list {
             list-style: none;
             padding: 0;
         }
 
-        #artist-list li, #song-list li, #unverified-companies-list li, #company-artists-list li {
+        #artist-list li, #song-list li, #unverified-companies-list li, #company-artists-list li, #pending-company-profiles-list li {
             padding: 0.8em 0;
             border-bottom: 1px solid #444;
         }
 
-        #artist-list li:last-child, #song-list li:last-child, #unverified-companies-list li:last-child, #company-artists-list li:last-child {
+        #artist-list li:last-child, #song-list li:last-child, #unverified-companies-list li:last-child, #company-artists-list li:last-child, #pending-company-profiles-list li:last-child {
             border-bottom: none;
         }
 
@@ -137,7 +137,7 @@
             font-size: 0.9em;
         }
 
-        input[type="text"], select {
+        input[type="text"], input[type="password"], select {
             width: calc(100% - 22px); /* Adjust for padding and border */
             padding: 0.8em;
             margin-bottom: 15px;
@@ -165,8 +165,35 @@
             margin-bottom: 10px;
         }
 
-        #admin-area-btn, #company-area-btn {
-            display: none; /* Initially hidden, will be shown based on "login" simulation */
+        #admin-area-btn, #company-area-btn, #user-profile-btn, #logout-btn {
+            display: none; /* Initially hidden, will be shown based on role/login */
+        }
+        #auth-buttons button {
+            margin-left: 0.5em;
+        }
+        #auth-forms {
+            display: none;
+            position: absolute;
+            top: 5em; /* Adjust as needed, below header */
+            right: 1em;
+            background-color: #282828;
+            padding: 1.5em;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 1000; /* Ensure it's on top of other content */
+        }
+        #auth-forms form {
+            display: flex;
+            flex-direction: column;
+        }
+        #auth-forms h3 {
+            color: #f05454;
+            margin-top: 0;
+            margin-bottom: 1em;
+            text-align: center;
+        }
+        #auth-forms button {
+            margin-top: 1em;
         }
 
         footer {
@@ -174,6 +201,19 @@
             padding: 1.5em 0;
             color: #aaa;
             font-size: 0.9em;
+        }
+        #pending-company-profiles-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #pending-company-profiles-list li button {
+            margin-left: 1em;
+            padding: 0.5em 1em;
+            font-size: 0.8em;
+        }
+        #company-profile-form {
+            display: none; /* Initially hidden */
         }
     </style>
 </head>
@@ -186,7 +226,34 @@
                 <button id="browse-songs-btn"><i class="fas fa-music"></i> Songs</button>
                 <button id="admin-area-btn" style="display:none;"><i class="fas fa-user-shield"></i> Admin</button>
                 <button id="company-area-btn" style="display:none;"><i class="fas fa-building"></i> Company</button>
+                <button id="user-profile-btn" style="display:none;"><i class="fas fa-user"></i> Profile</button>
+                <button id="logout-btn" style="display:none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                <div id="auth-buttons">
+                    <button id="login-btn">Login</button>
+                    <button id="register-btn">Register</button>
+                </div>
             </nav>
+        </div>
+        <div id="auth-forms">
+            <div id="login-form" style="display: none;">
+                <h3>Login</h3>
+                <form id="login-form-element">
+                    <input type="text" id="login-username" placeholder="Username" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button type="submit">Login</button>
+                    <button type="button" class="toggle-auth-form" data-target="register-form">Register Instead</button>
+                </form>
+            </div>
+
+            <div id="register-form" style="display: none;">
+                <h3>Register</h3>
+                <form id="register-form-element">
+                    <input type="text" id="register-username" placeholder="Username" required>
+                    <input type="password" id="register-password" placeholder="Password" required>
+                    <button type="submit">Register</button>
+                    <button type="button" class="toggle-auth-form" data-target="login-form">Login Instead</button>
+                </form>
+            </div>
         </div>
     </header>
 
@@ -215,8 +282,30 @@
             </div>
         </section>
 
+        <section id="user-profile-section" style="display:none;">
+            <h2><i class="fas fa-user"></i> User Profile</h2>
+            <div id="user-profile-details">
+                <p>Username: <span id="profile-username"></span></p>
+                <p>Role: <span id="profile-role"></span></p>
+                </div>
+             <button id="create-company-profile-btn">Create Music Distributor Profile</button>
+             <div id="company-profile-form" style="display:none;">
+                <h3>Create Music Distributor Company Profile</h3>
+                <form id="company-profile-form-element">
+                    <input type="text" id="company-profile-name" placeholder="Company Name" required>
+                    <textarea id="company-profile-description" placeholder="Company Description (Optional)"></textarea>
+                    <button type="submit">Submit Profile for Review</button>
+                    <button type="button" id="cancel-company-profile-btn">Cancel</button>
+                </form>
+            </div>
+        </section>
+
+
         <section id="admin-area-section" style="display:none;">
             <h2><i class="fas fa-user-shield"></i> Admin Area</h2>
+            <h3>Pending Music Distributor Company Profiles</h3>
+            <ul id="pending-company-profiles-list">
+                </ul>
             <h3>Unverified Distribution Companies</h3>
             <ul id="unverified-companies-list">
                 </ul>
@@ -248,15 +337,8 @@
     </footer>
 
     <script>
-        /* Inlined JavaScript - script.js content */
+        /* Inlined JavaScript - script.js content (updated with auth and profiles) */
         document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize SQLite database (in-memory for this demo)
-            const db = await initDB();
-            if (!db) {
-                alert("Failed to initialize SQLite database.");
-                return;
-            }
-
             // --- UI Elements ---
             const artistListSection = document.getElementById('artist-list-section');
             const songListSection = document.getElementById('song-list-section');
@@ -270,12 +352,38 @@
             const browseArtistsBtn = document.getElementById('browse-artists-btn');
             const browseSongsBtn = document.getElementById('browse-songs-btn');
 
+            // Auth UI Elements
+            const authButtonsDiv = document.getElementById('auth-buttons');
+            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
+            const authFormsDiv = document.getElementById('auth-forms');
+            const loginFormDiv = document.getElementById('login-form');
+            const registerFormDiv = document.getElementById('register-form');
+            const loginFormElement = document.getElementById('login-form-element');
+            const registerFormElement = document.getElementById('register-form-element');
+            const logoutBtn = document.getElementById('logout-btn');
+            const userProfileBtn = document.getElementById('user-profile-btn');
+            const userProfileSection = document.getElementById('user-profile-section');
+            const profileUsernameSpan = document.getElementById('profile-username');
+            const profileRoleSpan = document.getElementById('profile-role');
+            const toggleAuthFormsButtons = document.querySelectorAll('.toggle-auth-form');
+
+            // Company Profile UI
+            const createCompanyProfileBtn = document.getElementById('create-company-profile-btn');
+            const companyProfileFormDiv = document.getElementById('company-profile-form');
+            const companyProfileFormElement = document.getElementById('company-profile-form-element');
+            const companyProfileNameInput = document.getElementById('company-profile-name');
+            const companyProfileDescriptionInput = document.getElementById('company-profile-description');
+            const cancelCompanyProfileBtn = document.getElementById('cancel-company-profile-btn');
+
             // Admin Area Elements
             const adminAreaBtn = document.getElementById('admin-area-btn');
             const adminAreaSection = document.getElementById('admin-area-section');
             const unverifiedCompaniesList = document.getElementById('unverified-companies-list');
             const companyToVerifySelect = document.getElementById('company-to-verify');
             const submitVerifyCompanyBtn = document.getElementById('submit-verify-company-btn');
+            const pendingCompanyProfilesList = document.getElementById('pending-company-profiles-list');
+
 
             // Company Area Elements
             const companyAreaBtn = document.getElementById('company-area-btn');
@@ -286,6 +394,18 @@
             const newArtistNameInput = document.getElementById('new-artist-name');
             const submitNewArtistBtn = document.getElementById('submit-new-artist-btn');
 
+
+            // --- State Variables (Client-side simulation) ---
+            let currentUser = getLoggedInUser(); // Get user from localStorage on load
+            let db; // Database instance
+
+            // --- Initialize Database and UI ---
+            db = await initDB();
+            if (!db) {
+                alert("Failed to initialize SQLite database.");
+                return;
+            }
+            updateUIForUser(currentUser); // Initial UI update based on user login state
 
             // --- Event Listeners ---
             browseArtistsBtn.addEventListener('click', () => {
@@ -308,195 +428,59 @@
                 loadSongs(songSearchInput.value);
             });
 
-            adminAreaBtn.addEventListener('click', () => {
-                hideAllSections();
-                adminAreaSection.style.display = 'block';
-                loadUnverifiedCompaniesForAdmin(); // Load companies for verification
+            // Auth Event Listeners
+            loginBtn.addEventListener('click', () => {
+                authFormsDiv.style.display = 'block';
+                loginFormDiv.style.display = 'block';
+                registerFormDiv.style.display = 'none';
             });
 
-            submitVerifyCompanyBtn.addEventListener('click', async () => {
-                const companyIdToVerify = companyToVerifySelect.value;
-                if (companyIdToVerify) {
-                    await verifyDistributionCompany(companyIdToVerify);
-                    alert(`Company verified.`);
-                    loadUnverifiedCompaniesForAdmin(); // Refresh company list
-                    // Optionally refresh company area if company is "the current company"
+            registerBtn.addEventListener('click', () => {
+                authFormsDiv.style.display = 'block';
+                registerFormDiv.style.display = 'block';
+                loginFormDiv.style.display = 'none';
+            });
+
+            toggleAuthFormsButtons.forEach(button => {
+                button.addEventListener('click', function(event) {
+                    const targetFormId = this.dataset.target;
+                    loginFormDiv.style.display = (targetFormId === 'login-form') ? 'block' : 'none';
+                    registerFormDiv.style.display = (targetFormId === 'register-form') ? 'block' : 'none';
+                });
+            });
+
+
+            loginFormElement.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const username = loginUsernameInput.value;
+                const password = loginPasswordInput.value;
+                const user = await loginUser(username, password);
+                if (user) {
+                    currentUser = user;
+                    saveLoggedInUser(currentUser); // Save to localStorage
+                    updateUIForUser(currentUser);
+                    authFormsDiv.style.display = 'none'; // Hide auth forms
+                    alert(`Logged in as ${currentUser.username}`);
                 } else {
-                    alert('Please select a company to verify.');
+                    alert('Login failed. Invalid username or password.');
                 }
             });
 
-            companyAreaBtn.addEventListener('click', () => {
-                hideAllSections();
-                companyAreaSection.style.display = 'block';
-                loadArtistsForCompany('company1'); // Assuming 'company1' is the logged-in company for demo
-            });
-
-            addNewArtistBtn.addEventListener('click', () => {
-                addArtistForm.style.display = 'block';
-                addNewArtistBtn.style.display = 'none'; // Hide button while form is shown
-            });
-
-            submitNewArtistBtn.addEventListener('click', async () => {
-                const artistName = newArtistNameInput.value.trim();
-                if (artistName) {
-                    await addNewArtist('company1', artistName); // Assuming 'company1' is the logged-in company
-                    alert(`Artist "${artistName}" added.`);
-                    newArtistNameInput.value = ''; // Clear input
-                    addArtistForm.style.display = 'none'; // Hide form
-                    addNewArtistBtn.style.display = 'block'; // Show add new artist button again
-                    loadArtistsForCompany('company1'); // Refresh artist list for company
+            registerFormElement.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const username = registerUsernameInput.value;
+                const password = registerPasswordInput.value;
+                const success = await registerUser(username, password);
+                if (success) {
+                    alert('Registration successful. Please login.');
+                    registerFormDiv.style.display = 'none';
+                    loginFormDiv.style.display = 'block'; // Switch to login form
                 } else {
-                    alert('Please enter artist name.');
+                    alert('Registration failed. Username may be taken.');
                 }
             });
 
-
-            // --- Functions ---
-
-            function hideAllSections() {
-                artistListSection.style.display = 'none';
-                songListSection.style.display = 'none';
-                adminAreaSection.style.display = 'none';
-                companyAreaSection.style.display = 'none';
-                addArtistForm.style.display = 'none'; // Ensure form is hidden when switching sections
-                addNewArtistBtn.style.display = 'block'; // Re-show add new artist button
-            }
-
-            async function initDB() {
-                try {
-                    const db = await sqlite3.oo.JsDb.open();
-                    console.log("SQLite database opened.");
-
-                    // Create tables (if they don't exist) and insert initial data
-                    await setupDatabase(db);
-                    return db;
-                } catch (e) {
-                    console.error("Database initialization failed:", e);
-                    return null;
-                }
-            }
-
-            async function setupDatabase(db) {
-                // Check if tables exist (simple check - can be improved)
-                const tablesExist = await db.exec({ sql: "SELECT name FROM sqlite_master WHERE type='table' AND name='artists';", returnValue: 'exists' });
-                if (tablesExist) {
-                    console.log("Database tables already exist.");
-                    return; // Tables already setup
-                }
-
-                console.log("Creating database tables and inserting initial data...");
-
-                await db.exec(`
-                    CREATE TABLE distribution_companies (
-                        id TEXT PRIMARY KEY,
-                        name TEXT NOT NULL,
-                        verified INTEGER NOT NULL DEFAULT 0
-                    );
-
-                    CREATE TABLE artists (
-                        id TEXT PRIMARY KEY,
-                        distribution_company_id TEXT,
-                        name TEXT NOT NULL,
-                        bio TEXT,
-                        image_url TEXT,
-                        FOREIGN KEY (distribution_company_id) REFERENCES distribution_companies(id)
-                    );
-
-                    CREATE TABLE songs (
-                        id TEXT PRIMARY KEY,
-                        artist_id TEXT,
-                        title TEXT NOT NULL,
-                        audio_url TEXT NOT NULL,
-                        album_art_url TEXT,
-                        genre TEXT,
-                        FOREIGN KEY (artist_id) REFERENCES artists(id)
-                    );
-                `);
-
-                // Insert initial data
-                await insertInitialData(db);
-            }
-
-            async function insertInitialData(db) {
-                await db.exec({
-                    sql: `
-                        INSERT INTO distribution_companies (id, name, verified) VALUES
-                            ('company1', 'Indie Records Inc.', 1),
-                            ('company2', 'Global Music Group', 0),
-                            ('company3', 'Unverified Records', 0);
-
-                        INSERT INTO artists (id, distribution_company_id, name, bio) VALUES
-                            ('artist1', 'company1', 'Acoustic Soul', 'Emerging indie artist...'),
-                            ('artist2', 'company2', 'Electro Beats', 'High-energy electronic music...'),
-                            ('artist3', 'company1', 'Indie Pop Duo', 'Charming melodies and harmonies.');
-
-                        INSERT INTO songs (id, artist_id, title, audio_url, genre) VALUES
-                            ('song1', 'artist1', 'Whispering Winds', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-1.mp3', 'Indie Folk'),
-                            ('song2', 'artist2', 'Neon City Lights', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-2.mp3', 'Electronic'),
-                            ('song3', 'artist3', 'Sunset Drive', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-3.mp3', 'Indie Pop');
-                    `
-                });
-                console.log("Initial data inserted.");
-            }
-
-
-            async function loadArtists(searchTerm = '') {
-                artistListDiv.innerHTML = 'Loading artists...';
-                let sql = `SELECT * FROM artists`;
-                let params = {};
-                if (searchTerm) {
-                    sql += ` WHERE name LIKE '%' || $searchTerm || '%'`;
-                    params.$searchTerm = searchTerm;
-                }
-
-                const artists = await db.exec({
-                    sql: sql,
-                    bind: params,
-                    rowMode: 'object' // Get results as objects
-                });
-
-                if (!artists || artists.length === 0) {
-                    artistListDiv.innerHTML = 'No artists found.';
-                    return;
-                }
-
-                artistListDiv.innerHTML = ''; // Clear loading message
-                const ul = document.createElement('ul');
-                artists.forEach(artist => {
-                    const li = document.createElement('li');
-                    const artistButton = document.createElement('button');
-                    artistButton.textContent = artist.name;
-                    artistButton.addEventListener('click', () => loadSongsForArtist(artist.id)); // Example: Load songs by artist
-                    li.appendChild(artistButton);
-                    ul.appendChild(li);
-                });
-                artistListDiv.appendChild(ul);
-            }
-
-            async function loadSongs(searchTerm = '') {
-                songListDiv.innerHTML = 'Loading songs...';
-                let sql = `SELECT songs.*, artists.name as artist_name FROM songs JOIN artists ON songs.artist_id = artists.id`;
-                let params = {};
-                if (searchTerm) {
-                    sql += ` WHERE songs.title LIKE '%' || $searchTerm || '%' OR artists.name LIKE '%' || $searchTerm || '%'`;
-                    params.$searchTerm = searchTerm;
-                }
-
-                const songs = await db.exec({
-                    sql: sql,
-                    bind: params,
-                    rowMode: 'object'
-                });
-
-                if (!songs || songs.length === 0) {
-                    songListDiv.innerHTML = 'No songs found.';
-                    return;
-                }
-
-                songListDiv.innerHTML = '';
-                const ul = document.createElement('ul');
-                songs.forEach(song => {
-                    const li = document.createElement('li');
-                    const songButton = document.createElement('button');
-                    songButton.t
+            logoutBtn.addEventListener('click', () => {
+                currentUser = null;
+                clearLoggedInUser(); // Clear from localStorage
+    
