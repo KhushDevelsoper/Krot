@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KROT Music - Your Music Universe</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-js@latest/sqlite-js.js"></script>
+    <style>
+        /* Inlined CSS - style.css content */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* Dark background */
+            color: #fff; /* White text */
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1em 2em;
+        }
+
+        header {
+            background-color: #1e1e1e; /* Slightly lighter dark for header */
+            color: white;
+            padding: 0; /* Padding moved to .header-content */
+            text-align: left; /* Align text in header to the left */
+        }
+
+        .logo {
+            font-size: 1.8em;
+            margin: 0;
+            color: #f05454; /* KROT Music brand color - Reddish */
+        }
+
+        nav button {
+            background-color: transparent;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 0.7em 1.2em;
+            margin-left: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        nav button:hover {
+            background-color: #f05454;
+            color: #121212;
+            border-color: #f05454;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        section {
+            margin-bottom: 20px;
+            padding: 25px;
+            background-color: #282828; /* Darker section background */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 1px solid #333;
+        }
+
+        section h2 {
+            margin-top: 0;
+            color: #f05454; /* Section titles in brand color */
+            border-bottom: 2px solid #f05454;
+            padding-bottom: 0.5em;
+        }
+
+        #artist-list, #song-list, #unverified-companies-list, #company-artists-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        #artist-list li, #song-list li, #unverified-companies-list li, #company-artists-list li {
+            padding: 0.8em 0;
+            border-bottom: 1px solid #444;
+        }
+
+        #artist-list li:last-child, #song-list li:last-child, #unverified-companies-list li:last-child, #company-artists-list li:last-child {
+            border-bottom: none;
+        }
+
+        #artist-list li button, #song-list li button {
+            background: transparent;
+            border: none;
+            color: #fff;
+            text-align: left;
+            padding: 0.5em 0;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+        }
+
+        #artist-list li button:hover, #song-list li button:hover {
+            color: #f05454;
+        }
+
+
+        #music-player-section {
+            text-align: center;
+            background-color: #1e1e1e;
+            padding: 2em 1em;
+            border-radius: 8px;
+            box-shadow: 0 -4px 8px rgba(0,0,0,0.3); /* Shadow on top */
+            margin-top: 20px;
+        }
+
+        .player-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #player-controls audio {
+            width: 100%; /* Responsive audio player */
+        }
+
+        #song-info {
+            margin-bottom: 1em;
+        }
+
+        #song-info h3 {
+            margin: 0 0 0.3em 0;
+            font-size: 1.2em;
+            color: #fff;
+        }
+
+        #song-info p {
+            margin: 0;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        input[type="text"], select {
+            width: calc(100% - 22px); /* Adjust for padding and border */
+            padding: 0.8em;
+            margin-bottom: 15px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #333;
+            color: #fff;
+        }
+
+        button {
+            background-color: #f05454;
+            color: #121212;
+            border: none;
+            padding: 0.8em 1.5em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #c73c3c;
+        }
+
+        #add-artist-form input[type="text"] {
+            margin-bottom: 10px;
+        }
+
+        #admin-area-btn, #company-area-btn {
+            display: none; /* Initially hidden, will be shown based on "login" simulation */
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5em 0;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1 class="logo">KROT Music</h1>
+            <nav>
+                <button id="browse-artists-btn"><i class="fas fa-microphone-lines"></i> Artists</button>
+                <button id="browse-songs-btn"><i class="fas fa-music"></i> Songs</button>
+                <button id="admin-area-btn" style="display:none;"><i class="fas fa-user-shield"></i> Admin</button>
+                <button id="company-area-btn" style="display:none;"><i class="fas fa-building"></i> Company</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section id="artist-list-section" style="display:none;">
+            <h2><i class="fas fa-microphone-lines"></i> Artists</h2>
+            <input type="text" id="artist-search" placeholder="Search artists...">
+            <div id="artist-list">
+                </div>
+        </section>
+
+        <section id="song-list-section" style="display:none;">
+            <h2><i class="fas fa-music"></i> Songs</h2>
+            <input type="text" id="song-search" placeholder="Search songs...">
+            <div id="song-list">
+                </div>
+        </section>
+
+        <section id="music-player-section">
+            <div class="player-container">
+                <div id="song-info">
+                    <h3 id="song-title-display">No song selected</h3>
+                    <p id="artist-name-display"></p>
+                </div>
+                <audio id="audio-player" controls></audio>
+            </div>
+        </section>
+
+        <section id="admin-area-section" style="display:none;">
+            <h2><i class="fas fa-user-shield"></i> Admin Area</h2>
+            <h3>Unverified Distribution Companies</h3>
+            <ul id="unverified-companies-list">
+                </ul>
+            <h3>Verify Company</h3>
+            <div id="verify-company-form">
+                <select id="company-to-verify">
+                    <option value="">Select Company to Verify</option>
+                </select>
+                <button id="submit-verify-company-btn">Verify Company</button>
+            </div>
+        </section>
+
+        <section id="company-area-section" style="display:none;">
+            <h2><i class="fas fa-building"></i> Company Area</h2>
+            <h3>Your Artists</h3>
+            <ul id="company-artists-list">
+                </ul>
+            <h3>Add New Artist</h3>
+            <div id="add-artist-form" style="display:none;">
+                <input type="text" id="new-artist-name" placeholder="Artist Name">
+                <button id="submit-new-artist-btn">Add Artist</button>
+            </div>
+            <button id="add-new-artist-btn">Add New Artist</button>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 KROT Music - Demo Version</p>
+    </footer>
+
+    <script>
+        /* Inlined JavaScript - script.js content */
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize SQLite database (in-memory for this demo)
+            const db = await initDB();
+            if (!db) {
+                alert("Failed to initialize SQLite database.");
+                return;
+            }
+
+            // --- UI Elements ---
+            const artistListSection = document.getElementById('artist-list-section');
+            const songListSection = document.getElementById('song-list-section');
+            const artistListDiv = document.getElementById('artist-list');
+            const songListDiv = document.getElementById('song-list');
+            const audioPlayer = document.getElementById('audio-player');
+            const songTitleDisplay = document.getElementById('song-title-display');
+            const artistNameDisplay = document.getElementById('artist-name-display');
+            const artistSearchInput = document.getElementById('artist-search');
+            const songSearchInput = document.getElementById('song-search');
+            const browseArtistsBtn = document.getElementById('browse-artists-btn');
+            const browseSongsBtn = document.getElementById('browse-songs-btn');
+
+            // Admin Area Elements
+            const adminAreaBtn = document.getElementById('admin-area-btn');
+            const adminAreaSection = document.getElementById('admin-area-section');
+            const unverifiedCompaniesList = document.getElementById('unverified-companies-list');
+            const companyToVerifySelect = document.getElementById('company-to-verify');
+            const submitVerifyCompanyBtn = document.getElementById('submit-verify-company-btn');
+
+            // Company Area Elements
+            const companyAreaBtn = document.getElementById('company-area-btn');
+            const companyAreaSection = document.getElementById('company-area-section');
+            const companyArtistsList = document.getElementById('company-artists-list');
+            const addNewArtistBtn = document.getElementById('add-new-artist-btn');
+            const addArtistForm = document.getElementById('add-artist-form');
+            const newArtistNameInput = document.getElementById('new-artist-name');
+            const submitNewArtistBtn = document.getElementById('submit-new-artist-btn');
+
+
+            // --- Event Listeners ---
+            browseArtistsBtn.addEventListener('click', () => {
+                hideAllSections();
+                artistListSection.style.display = 'block';
+                loadArtists();
+            });
+
+            browseSongsBtn.addEventListener('click', () => {
+                hideAllSections();
+                songListSection.style.display = 'block';
+                loadSongs();
+            });
+
+            artistSearchInput.addEventListener('input', () => {
+                loadArtists(artistSearchInput.value);
+            });
+
+            songSearchInput.addEventListener('input', () => {
+                loadSongs(songSearchInput.value);
+            });
+
+            adminAreaBtn.addEventListener('click', () => {
+                hideAllSections();
+                adminAreaSection.style.display = 'block';
+                loadUnverifiedCompaniesForAdmin(); // Load companies for verification
+            });
+
+            submitVerifyCompanyBtn.addEventListener('click', async () => {
+                const companyIdToVerify = companyToVerifySelect.value;
+                if (companyIdToVerify) {
+                    await verifyDistributionCompany(companyIdToVerify);
+                    alert(`Company verified.`);
+                    loadUnverifiedCompaniesForAdmin(); // Refresh company list
+                    // Optionally refresh company area if company is "the current company"
+                } else {
+                    alert('Please select a company to verify.');
+                }
+            });
+
+            companyAreaBtn.addEventListener('click', () => {
+                hideAllSections();
+                companyAreaSection.style.display = 'block';
+                loadArtistsForCompany('company1'); // Assuming 'company1' is the logged-in company for demo
+            });
+
+            addNewArtistBtn.addEventListener('click', () => {
+                addArtistForm.style.display = 'block';
+                addNewArtistBtn.style.display = 'none'; // Hide button while form is shown
+            });
+
+            submitNewArtistBtn.addEventListener('click', async () => {
+                const artistName = newArtistNameInput.value.trim();
+                if (artistName) {
+                    await addNewArtist('company1', artistName); // Assuming 'company1' is the logged-in company
+                    alert(`Artist "${artistName}" added.`);
+                    newArtistNameInput.value = ''; // Clear input
+                    addArtistForm.style.display = 'none'; // Hide form
+                    addNewArtistBtn.style.display = 'block'; // Show add new artist button again
+                    loadArtistsForCompany('company1'); // Refresh artist list for company
+                } else {
+                    alert('Please enter artist name.');
+                }
+            });
+
+
+            // --- Functions ---
+
+            function hideAllSections() {
+                artistListSection.style.display = 'none';
+                songListSection.style.display = 'none';
+                adminAreaSection.style.display = 'none';
+                companyAreaSection.style.display = 'none';
+                addArtistForm.style.display = 'none'; // Ensure form is hidden when switching sections
+                addNewArtistBtn.style.display = 'block'; // Re-show add new artist button
+            }
+
+            async function initDB() {
+                try {
+                    const db = await sqlite3.oo.JsDb.open();
+                    console.log("SQLite database opened.");
+
+                    // Create tables (if they don't exist) and insert initial data
+                    await setupDatabase(db);
+                    return db;
+                } catch (e) {
+                    console.error("Database initialization failed:", e);
+                    return null;
+                }
+            }
+
+            async function setupDatabase(db) {
+                // Check if tables exist (simple check - can be improved)
+                const tablesExist = await db.exec({ sql: "SELECT name FROM sqlite_master WHERE type='table' AND name='artists';", returnValue: 'exists' });
+                if (tablesExist) {
+                    console.log("Database tables already exist.");
+                    return; // Tables already setup
+                }
+
+                console.log("Creating database tables and inserting initial data...");
+
+                await db.exec(`
+                    CREATE TABLE distribution_companies (
+                        id TEXT PRIMARY KEY,
+                        name TEXT NOT NULL,
+                        verified INTEGER NOT NULL DEFAULT 0
+                    );
+
+                    CREATE TABLE artists (
+                        id TEXT PRIMARY KEY,
+                        distribution_company_id TEXT,
+                        name TEXT NOT NULL,
+                        bio TEXT,
+                        image_url TEXT,
+                        FOREIGN KEY (distribution_company_id) REFERENCES distribution_companies(id)
+                    );
+
+                    CREATE TABLE songs (
+                        id TEXT PRIMARY KEY,
+                        artist_id TEXT,
+                        title TEXT NOT NULL,
+                        audio_url TEXT NOT NULL,
+                        album_art_url TEXT,
+                        genre TEXT,
+                        FOREIGN KEY (artist_id) REFERENCES artists(id)
+                    );
+                `);
+
+                // Insert initial data
+                await insertInitialData(db);
+            }
+
+            async function insertInitialData(db) {
+                await db.exec({
+                    sql: `
+                        INSERT INTO distribution_companies (id, name, verified) VALUES
+                            ('company1', 'Indie Records Inc.', 1),
+                            ('company2', 'Global Music Group', 0),
+                            ('company3', 'Unverified Records', 0);
+
+                        INSERT INTO artists (id, distribution_company_id, name, bio) VALUES
+                            ('artist1', 'company1', 'Acoustic Soul', 'Emerging indie artist...'),
+                            ('artist2', 'company2', 'Electro Beats', 'High-energy electronic music...'),
+                            ('artist3', 'company1', 'Indie Pop Duo', 'Charming melodies and harmonies.');
+
+                        INSERT INTO songs (id, artist_id, title, audio_url, genre) VALUES
+                            ('song1', 'artist1', 'Whispering Winds', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-1.mp3', 'Indie Folk'),
+                            ('song2', 'artist2', 'Neon City Lights', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-2.mp3', 'Electronic'),
+                            ('song3', 'artist3', 'Sunset Drive', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-3.mp3', 'Indie Pop');
+                    `
+                });
+                console.log("Initial data inserted.");
+            }
+
+
+            async function loadArtists(searchTerm = '') {
+                artistListDiv.innerHTML = 'Loading artists...';
+                let sql = `SELECT * FROM artists`;
+                let params = {};
+                if (searchTerm) {
+                    sql += ` WHERE name LIKE '%' || $searchTerm || '%'`;
+                    params.$searchTerm = searchTerm;
+                }
+
+                const artists = await db.exec({
+                    sql: sql,
+                    bind: params,
+                    rowMode: 'object' // Get results as objects
+                });
+
+                if (!artists || artists.length === 0) {
+                    artistListDiv.innerHTML = 'No artists found.';
+                    return;
+                }
+
+                artistListDiv.innerHTML = ''; // Clear loading message
+                const ul = document.createElement('ul');
+                artists.forEach(artist => {
+                    const li = document.createElement('li');
+                    const artistButton = document.createElement('button');
+                    artistButton.textContent = artist.name;
+                    artistButton.addEventListener('click', () => loadSongsForArtist(artist.id)); // Example: Load songs by artist
+                    li.appendChild(artistButton);
+                    ul.appendChild(li);
+                });
+                artistListDiv.appendChild(ul);
+            }
+
+            async function loadSongs(searchTerm = '') {
+                songListDiv.innerHTML = 'Loading songs...';
+                let sql = `SELECT songs.*, artists.name as artist_name FROM songs JOIN artists ON songs.artist_id = artists.id`;
+                let params = {};
+                if (searchTerm) {
+                    sql += ` WHERE songs.title LIKE '%' || $searchTerm || '%' OR artists.name LIKE '%' || $searchTerm || '%'`;
+                    params.$searchTerm = searchTerm;
+                }
+
+                const songs = await db.exec({
+                    sql: sql,
+                    bind: params,
+                    rowMode: 'object'
+                });
+
+                if (!songs || songs.length === 0) {
+                    songListDiv.innerHTML = 'No songs found.';
+                    return;
+                }
+
+                songListDiv.innerHTML = '';
+                const ul = document.createElement('ul');
+                songs.forEach(song => {
+                    const li = document.createElement('li');
+                    const songButton = document.createElement('button');
+                    songButton.t
