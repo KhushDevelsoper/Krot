@@ -1,7 +1,7 @@
 // script.js
 
-const ADMIN_USERNAME = "Admin@KrotOfficial";
-const ADMIN_PASSWORD = "KROT";
+const ADMIN_USERNAME = "admin@krot.off"; // **Your New Email**
+const ADMIN_PASSWORD = "KROT";        // **Your New Password**
 const SONGS_PER_PAGE = 10; // Pagination limit
 
 let loggedInUserEmail = localStorage.getItem('loggedInUserEmail');
@@ -194,7 +194,6 @@ function registerUser(email, password, role, companyName = null) {
         showSection('login');
     }
 }
-
 
 // Login Handler
 document.getElementById('login-form').addEventListener('submit', function(event) {
