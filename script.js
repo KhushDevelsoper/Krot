@@ -1115,4 +1115,15 @@ function loadInitialData() {
         console.error("Error loading initial songs into database:", dbError);
     }
 
+    async function initDBAndLoad() {
+    console.log("initDBAndLoad function is being called!"); // <--- Add this line
+    db = await initSqlJs({ wasmUrl: 'sql-wasm.wasm' }); // Adjust path if needed
+    initDatabaseSchema();
+    loadInitialData(); // This will also load songs from DB and update UI
+
+    updateNavigation();
+    showSection('register-listener');
+    updatePaginationButtons();
+    }
+
     // ... (rest of your loadInitialData function if you 
