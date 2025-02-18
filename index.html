@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KROT Music Platform</title>
+    <title>Music Platform</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 </head>
 <body>
     <header>
-        <h1>KROT Music Platform</h1>
+        <h1>Music Platform</h1>
         <nav>
             <ul>
                 <li><a href="#" onclick="showSection('register-listener')">Register as Listener</a></li>
@@ -18,8 +18,8 @@
                 <li><a href="#" onclick="showSection('songs')" id="songs-link" style="display: none;">Songs</a></li>
                 <li id="company-dashboard-link" style="display: none;"><a href="#" onclick="showSection('company-dashboard')">Company Dashboard</a></li>
                 <li id="admin-link" style="display: none;"><a href="#" onclick="showSection('admin')">Admin Panel</a></li>
-                <li id="profile-link" style="display: none;"><a href="#" onclick="showSection('profile')">Profile</a></li>
-                <li id="logout-link" style="display: none;"><a href="#" onclick="logout()">Logout</a></li>
+                <li><a href="#" onclick="showSection('profile')" id="profile-link" style="display: none;">Profile</a></li>
+                <li><a href="#" onclick="logout()" id="logout-link" style="display: none;">Logout</a></li>
             </ul>
         </nav>
     </header>
@@ -28,197 +28,184 @@
         <section id="register-listener" class="auth-section" style="display: none;">
             <h2>Register as Listener</h2>
             <form id="listener-register-form">
-                <input type="email" id="listener-email" placeholder="Email" required>
-                <input type="password" id="listener-password" placeholder="Password" required>
-                <button type="submit">Register as Listener</button>
+                <input type="email" id="listener-email" placeholder="Email" required><br>
+                <input type="password" id="listener-password" placeholder="Password" required><br>
+                <button type="submit">Register Listener</button>
             </form>
         </section>
 
         <section id="register-company" class="auth-section" style="display: none;">
-            <h2>Register as Distribution Company</h2>
+            <h2>Register as Company</h2>
+            <p id="company-reg-status-message" style="display: none; color: green;">Registration submitted for approval. Please wait for admin confirmation.</p>
             <form id="company-register-form">
-                <input type="email" id="company-email" placeholder="Company Email" required>
-                <input type="password" id="company-password" placeholder="Password" required>
-                <input type="text" id="company-name" placeholder="Company Name" required>
-                <button type="submit">Register as Company</button>
-                <p id="company-reg-status-message" style="display: none; color: green; margin-top: 10px;">Registration submitted for approval. Please wait for admin confirmation.</p>
+                <input type="email" id="company-email" placeholder="Company Email" required><br>
+                <input type="password" id="company-password" placeholder="Password" required><br>
+                <input type="text" id="company-name" placeholder="Company Name" required><br>
+                <button type="submit">Register Company</button>
             </form>
         </section>
 
         <section id="login" class="auth-section" style="display: none;">
             <h2>Login</h2>
             <form id="login-form">
-                <input type="email" id="login-email" placeholder="Email" required>
-                <input type="password" id="login-password" placeholder="Password" required>
+                <input type="email" id="login-email" placeholder="Email" required><br>
+                <input type="password" id="login-password" placeholder="Password" required><br>
                 <button type="submit">Login</button>
             </form>
         </section>
 
         <section id="songs" style="display: none;">
-            <h2>Available Songs</h2>
-            <div id="song-filter-sort">
-                <div id="song-search">
-                    <input type="text" id="search-query" placeholder="Search songs...">
-                    <button onclick="searchSongs()">Search</button>
+            <h2>Songs</h2>
+            <div class="controls">
+                <input type="text" id="search-query" placeholder="Search songs..." oninput="searchSongs()">
+                <select id="genre-filter" onchange="loadSongsForPage(1)">
+                    <option value="">All Genres</option>
+                    <option value="Pop">Pop</option>
+                    <option value="Rock">Rock</option>
+                    <option value="Jazz">Jazz</option>
+                    <option value="Electronic">Electronic</option>
+                    <option value="Classical">Classical</option>
+                    <option value="Hip Hop">Hip Hop</option>
+                </select>
+                <select id="sort-by" onchange="loadSongsForPage(1)">
+                    <option value="default">Sort By: Default</option>
+                    <option value="title">Sort By: Title</option>
+                    <option value="artist">Sort By: Artist</option>
+                    <option value="genre">Sort By: Genre</option>
+                </select>
+            </div>
+            <div id="song-list" class="song-grid">
                 </div>
-                <div id="song-filters">
-                    <select id="genre-filter">
-                        <option value="">All Genres</option>
-                        <option value="Pop">Pop</option>
-                        <option value="Rock">Rock</option>
-                        <option value="Hip-Hop">Hip-Hop</option>
-                        <option value="Electronic">Electronic</option>
-                        <option value="Classical">Classical</option>
-                        <option value="Jazz">Jazz</option>
-                        <option value="Country">Country</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <select id="sort-by">
-                        <option value="default">Sort By</option>
-                        <option value="title">Title</option>
-                        <option value="artist">Artist</option>
-                        <option value="genre">Genre</option>
-                    </select>
+            <div class="pagination">
+                <button id="prev-page" onclick="prevPage()" disabled>&lt; Previous</button>
+                <span id="page-number">Page 1 of 1</span>
+                <button id="next-page" onclick="nextPage()" disabled>Next &gt;</button>
+            </div>
+
+            <div class="popular-recent-songs">
+                <div class="popular-songs">
+                    <h3>Popular Songs</h3>
+                    <div id="popular-song-list">
+                        </div>
+                </div>
+                <div class="recent-songs">
+                    <h3>Recently Uploaded</h3>
+                    <div id="recent-song-list">
+                        </div>
                 </div>
             </div>
-            <div id="song-list">
-            </div>
-            <div id="pagination">
-                <button id="prev-page" disabled onclick="prevPage()">Previous</button>
-                <span id="page-number">Page 1</span>
-                <button id="next-page" disabled onclick="nextPage()">Next</button>
-            </div>
-            <div id="audio-player-container" style="display: none;">
-                <audio id="audio-player" controls></audio>
-                <div id="current-song-info"></div>
-            </div>
-            <div id="popular-songs" style="margin-top: 20px;">
-                <h3>Popular Songs</h3>
-                <div id="popular-song-list"></div>
-            </div>
-            <div id="recent-songs" style="margin-top: 20px;">
-                <h3>Recently Uploaded</h3>
-                <div id="recent-song-list"></div>
+        </section>
+
+        <section id="admin" style="display: none;">
+            <h2>Admin Panel</h2>
+            <div id="admin-content">
+                <nav>
+                    <button onclick="showAdminSection('pending-companies')">Pending Companies</button>
+                    <button onclick="showAdminSection('admin-songs')">Manage Songs</button>
+                    <button onclick="showAdminSection('admin-users')">Manage Users</button>
+                    <button onclick="showAdminSection('admin-companies')">Manage Companies</button>
+                </nav>
+                <section id="admin-pending-companies" style="display: none;">
+                    <h3>Pending Company Registrations</h3>
+                    <div id="pending-company-list">
+                        </div>
+                </section>
+                <section id="admin-songs" style="display: none;">
+                    <h3>Manage Songs</h3>
+                    <div id="admin-song-list">
+                        </div>
+                </section>
+                <section id="admin-users" style="display: none;">
+                    <h3>Manage Users (Listeners)</h3>
+                    <div id="admin-user-list">
+                        </div>
+                </section>
+                <section id="admin-companies" style="display: none;">
+                    <h3>Manage Approved Companies</h3>
+                    <div id="admin-company-list">
+                        </div>
+                </section>
             </div>
         </section>
 
         <section id="company-dashboard" style="display: none;">
             <h2>Company Dashboard</h2>
-            <div id="company-actions">
-                <button onclick="showCompanySection('upload-song')">Upload Song</button>
-                <button onclick="showCompanySection('artist-profiles')">Manage Artist Profiles</button>
-                <button onclick="showCompanySection('artist-profile-requests')">Artist Profile Requests</button>
-            </div>
-
             <div id="company-content">
+                <nav>
+                    <button onclick="showCompanySection('upload-song')">Upload Song</button>
+                    <button onclick="showCompanySection('company-artist-profiles')">Artist Profiles</button>
+                    <button onclick="showCompanySection('company-artist-profile-requests')">Artist Profile Requests</button>
+                </nav>
+
                 <section id="company-upload-song" style="display: none;">
-                    <h3>Upload Song</h3>
+                    <h3>Upload New Song</h3>
                     <form id="company-upload-form">
-                        <input type="text" id="song-title" placeholder="Song Title" required>
-                        <input type="text" id="artist-name" placeholder="Artist Name" required>
+                        <input type="text" id="song-title" placeholder="Song Title" required><br>
+                        <input type="text" id="artist-name" placeholder="Artist Name" required><br>
                         <select id="song-genre" required>
                             <option value="">Select Genre</option>
                             <option value="Pop">Pop</option>
                             <option value="Rock">Rock</option>
-                            <option value="Hip-Hop">Hip-Hop</option>
+                            <option value="Jazz">Jazz</option>
                             <option value="Electronic">Electronic</option>
                             <option value="Classical">Classical</option>
-                            <option value="Jazz">Jazz</option>
-                            <option value="Country">Country</option>
-                            <option value="Other">Other</option>
-                        </select>
-                        <input type="file" id="audio-file" accept="audio/*" required>
+                            <option value="Hip Hop">Hip Hop</option>
+                        </select><br>
+                        <input type="file" id="audio-file" accept=".mp3, .wav" required><br>
                         <button type="submit">Upload Song</button>
                     </form>
                 </section>
 
                 <section id="company-artist-profiles" style="display: none;">
-                    <h3>Manage Artist Profiles</h3>
-                    <button onclick="showCompanySection('create-artist-profile')">Create New Artist Profile</button>
+                    <h3>Artist Profiles</h3>
                     <div id="company-artist-profile-list">
-                    </div>
-                </section>
-
-                <section id="company-create-artist-profile" style="display: none;">
-                    <h3>Create Artist Profile</h3>
+                        </div>
+                    <h4>Create New Artist Profile</h4>
                     <form id="create-artist-profile-form">
-                        <input type="text" id="artist-profile-name" placeholder="Artist Name" required>
-                        <textarea id="artist-profile-bio" placeholder="Artist Bio (Optional)"></textarea>
-                        <button type="submit">Create Artist Profile</button>
+                        <input type="text" id="artist-profile-name" placeholder="Artist Name" required><br>
+                        <textarea id="artist-profile-bio" placeholder="Artist Bio (Optional)"></textarea><br>
+                        <button type="submit">Create Profile</button>
                     </form>
                 </section>
 
                 <section id="company-artist-profile-requests" style="display: none;">
                     <h3>Artist Profile Requests</h3>
                     <div id="company-artist-profile-request-list">
-                    </div>
-                </section>
-            </div>
-        </section>
-
-        <section id="admin" style="display: none;">
-            <h2>Admin Panel</h2>
-            <p>Welcome Admin!</p>
-            <div id="admin-actions">
-                <button onclick="showAdminSection('pending-companies')">Pending Company Approvals</button>
-                <button onclick="showAdminSection('admin-songs')">Manage Songs</button>
-                <button onclick="showAdminSection('admin-users')">Manage Users</button>
-                <button onclick="showAdminSection('admin-companies')">Manage Companies</button>
-            </div>
-
-            <div id="admin-content">
-                <section id="admin-pending-companies" style="display: none;">
-                    <h3>Pending Company Registrations</h3>
-                    <div id="pending-company-list">
-                    </div>
-                </section>
-
-                <section id="admin-songs" style="display: none;">
-                    <h3>Manage Songs</h3>
-                    <div id="admin-song-list">
-                    </div>
-                </section>
-
-                <section id="admin-users" style="display: none;">
-                    <h3>Manage Users (Listeners)</h3>
-                    <div id="admin-user-list">
-                    </div>
-                </section>
-
-                <section id="admin-companies" style="display: none;">
-                    <h3>Manage Companies</h3>
-                    <div id="admin-company-list">
-                    </div>
+                        </div>
                 </section>
             </div>
         </section>
 
         <section id="profile" style="display: none;">
-            <h2>My Profile</h2>
-            <div id="user-profile-details">
-                <p>Email: <span id="profile-email"></span></p>
-                <p>Role: <span id="profile-role"></span></p>
-            </div>
-            <div id="liked-songs-section">
-                <h3>Liked Songs</h3>
-                <div id="liked-song-list"></div>
-            </div>
+            <h2>User Profile</h2>
+            <p>Email: <span id="profile-email"></span></p>
+            <p>Role: <span id="profile-role"></span></p>
+            <h3>Liked Songs</h3>
+            <div id="liked-song-list">
+                </div>
         </section>
 
         <section id="artist-profile-page" style="display: none;">
-            <h2 id="artist-profile-name-display"></h2>
-            <div id="artist-profile-bio-display"></div>
-        </section>
+            <h2 id="artist-profile-name-display">Artist Profile</h2>
+            <div id="artist-profile-bio-display">
+                </div>
+            </section>
 
         <section id="company-profile-page" style="display: none;">
-            <h2 id="company-profile-name-display"></h2>
-            <div id="company-profile-song-count"></div>
-        </section>
+            <h2 id="company-profile-name-display">Company Profile</h2>
+            <p id="company-profile-song-count">Songs Uploaded: </p>
+            </section>
+
     </main>
 
     <footer>
-        <p>&copy; 2025 KROT Music</p>
+        <p>&copy; 2023 Music Platform</p>
     </footer>
+
+    <div id="audio-player-container" style="display: none;">
+        <audio id="audio-player" controls></audio>
+        <div id="current-song-info">Now playing: </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
