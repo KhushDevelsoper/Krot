@@ -1,7 +1,7 @@
 // script.js
 
-const ADMIN_USERNAME = "Admin@Krot.co";
-const ADMIN_PASSWORD = "KROTMusic2025";
+const ADMIN_USERNAME = "Admin@KrotOfficial";
+const ADMIN_PASSWORD = "KROT";
 const SONGS_PER_PAGE = 10; // Pagination limit
 
 let loggedInUserEmail = localStorage.getItem('loggedInUserEmail');
