@@ -13,11 +13,12 @@
             <ul>
                 <li><a href="#" onclick="showSection('register-listener')">Register as Listener</a></li>
                 <li><a href="#" onclick="showSection('register-company')">Register as Company</a></li>
-                <li><a href="#" onclick="showSection('login')">Login</a></li>
+                <li><a href="#" onclick="showSection('login')" id="login-link">Login</a></li>
                 <li><a href="#" onclick="showSection('songs')" id="songs-link" style="display: none;">Songs</a></li>
                 <li id="company-dashboard-link" style="display: none;"><a href="#" onclick="showSection('company-dashboard')">Company Dashboard</a></li>
                 <li id="admin-link" style="display: none;"><a href="#" onclick="showSection('admin')">Admin Panel</a></li>
-                <li id="profile-link" style="display: none;"><a href="#" onclick="showSection('profile')">Profile</a></li> <li id="logout-link" style="display: none;"><a href="#" onclick="logout()">Logout</a></li>
+                <li id="profile-link" style="display: none;"><a href="#" onclick="showSection('profile')">Profile</a></li>
+                <li id="logout-link" style="display: none;"><a href="#" onclick="logout()">Logout</a></li>
             </ul>
         </nav>
     </header>
@@ -158,7 +159,9 @@
             <p>Welcome Admin!</p>
             <div id="admin-actions">
                 <button onclick="showAdminSection('pending-companies')">Pending Company Approvals</button>
-                <button onclick="showAdminSection('admin-songs')">Manage Songs</a></button>
+                <button onclick="showAdminSection('admin-songs')">Manage Songs</button>
+                <button onclick="showAdminSection('admin-users')">Manage Users</button>
+                <button onclick="showAdminSection('admin-companies')">Manage Companies</button>
             </div>
 
             <div id="admin-content">
@@ -173,12 +176,26 @@
                     <div id="admin-song-list">
                         </div>
                 </section>
+
+                <section id="admin-users" style="display: none;">
+                    <h3>Manage Users (Listeners)</h3>
+                    <div id="admin-user-list">
+                        </div>
+                </section>
+
+                <section id="admin-companies" style="display: none;">
+                    <h3>Manage Companies</h3>
+                    <div id="admin-company-list">
+                        </div>
+                </section>
             </div>
         </section>
 
-        <section id="profile" style="display: none;"> <h2>My Profile</h2>
+        <section id="profile" style="display: none;">
+            <h2>My Profile</h2>
             <div id="user-profile-details">
                 <p>Email: <span id="profile-email"></span></p>
+                <p>Role: <span id="profile-role"></span></p>
             </div>
             <div id="liked-songs-section">
                 <h3>Liked Songs</h3>
@@ -186,13 +203,15 @@
             </div>
         </section>
 
-        <section id="artist-profile-page" style="display: none;"> <h2 id="artist-profile-name-display"></h2>
+        <section id="artist-profile-page" style="display: none;">
+            <h2 id="artist-profile-name-display"></h2>
             <div id="artist-profile-bio-display"></div>
-            </section>
+        </section>
 
-        <section id="company-profile-page" style="display: none;"> <h2 id="company-profile-name-display"></h2>
+        <section id="company-profile-page" style="display: none;">
+            <h2 id="company-profile-name-display"></h2>
             <div id="company-profile-song-count"></div>
-            </section>
+        </section>
     </main>
 
     <footer>
