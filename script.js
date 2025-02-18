@@ -1121,9 +1121,37 @@ function loadInitialData() {
     initDatabaseSchema();
     loadInitialData(); // This will also load songs from DB and update UI
 
-    updateNavigation();
-    showSection('register-listener');
-    updatePaginationButtons();
+    function showSection(sectionId) {
+    document.querySelectorAll('main > section').forEach(section => {
+        section.style.display = 'none'; // This line hides ALL sections
+    });
+    document.getElementById(sectionId).style.display = 'block'; // This line shows the target section
+
+    if (sectionId === 'songs') {
+        loadSongsForPage(currentPage);
     }
+    if (sectionId === 'admin' && userRole !== 'admin') {
+        alert('Admin access only.');
+        showSection('login');
+        return;
+    }
+    if (sectionId === 'company-dashboard' && userRole !== 'company') {
+        alert('Company dashboard access only.');
+        showSection('login');
+        return;
+    }
+    if (sectionId === 'company-dashboard') {
+        showCompanySection('upload-song');
+        loadCompanyArtistProfiles();
+        loadCompanyArtistProfileRequests();
+    }
+    if (sectionId === 'admin') {
+        showAdminSection('pending-companies');
+        loadAdminSongs();
+    }
+    if (sectionId === 'profile') {
+        loadUserProfile();
+    }
+}
 
     // ... (rest of your loadInitialData function if you 
