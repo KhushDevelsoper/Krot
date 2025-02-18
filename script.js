@@ -6,7 +6,7 @@ const SONGS_PER_PAGE = 10; // Pagination limit
 
 let loggedInUserEmail = localStorage.getItem('loggedInUserEmail');
 let userRole = localStorage.getItem('userRole');
-let songs = JSON.parse(localStorage.getItem('songs') || '[]');
+let songs = JSON.parse(localStorage.getItem('songs') || '[]'); // Still used initially for compatibility, will be replaced by DB
 let users = JSON.parse(localStorage.getItem('users') || '[]');
 let artistProfiles = JSON.parse(localStorage.getItem('artistProfiles') || '[]');
 let artistProfileRequests = JSON.parse(localStorage.getItem('artistProfileRequests') || '[]');
@@ -18,15 +18,21 @@ let currentSearchQuery = ''; // Store current search query
 let currentGenreFilter = ''; // Store current genre filter
 let currentSortBy = 'default'; // Store current sort option
 
+let db; // SQL.js database instance
 
 document.addEventListener('DOMContentLoaded', () => {
+    initDBAndLoad();
+});
+
+async function initDBAndLoad() {
+    db = await initSqlJs({ wasmUrl: 'sql-wasm.wasm' }); // Adjust path if needed
+    initDatabaseSchema();
+    loadInitialData(); // This will also load songs from DB and update UI
+
     updateNavigation();
-    loadSongsForPage(currentPage);
-    loadPopularSongs();
-    loadRecentSongs();
     showSection('register-listener');
     updatePaginationButtons();
-});
+}
 
 
 // Email Validation (Permissive)
@@ -200,6 +206,7 @@ function registerUser(email, password, role, companyName = null) {
     };
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
+    // TODO: Save user to SQL.js database as well if needed for more robust user management
 
     if (role === 'company' && registrationStatus === 'pending') {
         document.getElementById('company-reg-status-message').style.display = 'block';
@@ -208,6 +215,7 @@ function registerUser(email, password, role, companyName = null) {
     } else {
         alert(`Registered as ${role}! Please login.`);
         showSection('login');
+        return;
     }
 }
 
@@ -232,7 +240,7 @@ function login(email, password) {
         return;
     }
 
-    const user = users.find(user => user.email === email);
+    const user = users.find(user => user.email === email); // Still using localStorage users for simplicity
 
     if (user && user.password === password) {
         if (user.role === 'company' && user.registrationStatus !== 'approved') {
@@ -267,7 +275,7 @@ function logout() {
 }
 
 
-// Song Upload Handler (Company Role)
+// Song Upload Handler (Company Role) - Modified to save to SQL.js
 document.getElementById('company-upload-form').addEventListener('submit', function(event) {
     event.preventDefault();
     if (userRole !== 'company') {
@@ -278,38 +286,41 @@ document.getElementById('company-upload-form').addEventListener('submit', functi
     const title = document.getElementById('song-title').value;
     const artist = document.getElementById('artist-name').value;
     const genre = document.getElementById('song-genre').value;
-    const audioFile = document.getElementById('audio-file').files[0];
+    const audioFile = document.getElementById('audio-file').files[0]; // We'll handle audio file differently
 
-    if (!title || !artist || !genre || !audioFile) {
+    if (!title || !artist || !genre || !audioFile) { // audioFile is still checked for presence, but not directly saved to GitHub
         alert('Please fill in all song details and select an audio file.');
         return;
     }
 
-
     const reader = new FileReader();
     reader.onload = function(e) {
-        const songData = {
-            id: Date.now(),
-            title: title,
-            artist: artist,
-            genre: genre,
-            audioSrc: 'placeholder_audio_url', // Placeholder
-            uploadedBy: loggedInUserEmail
-        };
+        // Audio data (e.target.result) is available here as Data URL if you wanted to process it client-side
 
-        songs.push(songData);
-        localStorage.setItem('songs', JSON.stringify(songs));
-        loadSongsForPage(currentPage);
-        loadCompanySongs();
-        alert('Song uploaded successfully!');
-        document.getElementById('company-upload-form').reset();
+        // **SQL.js Database Insertion**
+        try {
+            db.run(`
+                INSERT INTO app_songs (title, artist, genre, audioSrc, uploadedBy)
+                VALUES (?, ?, ?, ?, ?)
+            `, [title, artist, genre, 'placeholder_audio_url', loggedInUserEmail]); // Still using placeholder for audioSrc
+
+            console.log('Song metadata saved to SQL.js database.');
+            loadSongsFromDatabase(); // Re-load songs from database to update UI
+            loadCompanySongs(); // Update company song lists if needed
+            alert('Song uploaded successfully (metadata saved)! Audio file is a placeholder in this demo.');
+            document.getElementById('company-upload-form').reset();
+
+        } catch (dbError) {
+            console.error('Database error saving song:', dbError);
+            alert('Error saving song metadata to database.');
+        }
     };
 
     reader.onerror = function() {
         alert('Error reading audio file.');
     };
 
-    reader.readAsDataURL(audioFile);
+    reader.readAsDataURL(audioFile); // We still read the audio file, but primarily for potential client-side processing or validation in a more advanced scenario. For now, it's mainly to satisfy the file input requirement.
 });
 
 
@@ -320,7 +331,7 @@ function loadSongsForPage(page) {
     const songListDiv = document.getElementById('song-list');
     songListDiv.innerHTML = '';
 
-    let filteredAndSortedSongs = getFilteredAndSortedSongs();
+    let filteredAndSortedSongs = getFilteredAndSortedSongsFromDatabase(); // Get data from SQL.js
 
     const startIndex = (page - 1) * SONGS_PER_PAGE;
     const endIndex = startIndex + SONGS_PER_PAGE;
@@ -343,37 +354,95 @@ function loadSongsForPage(page) {
 }
 
 
-function getFilteredAndSortedSongs() {
-    let filteredSongs = [...songs];
+function getFilteredAndSortedSongsFromDatabase() {
+    let filteredSongs = [];
+    let sqlQuery = "SELECT * FROM app_songs"; // Base query
+
+    let whereClauses = [];
+    let queryParams = [];
 
     if (currentGenreFilter && currentGenreFilter !== '') {
-        filteredSongs = filteredSongs.filter(song => song.genre === currentGenreFilter);
+        whereClauses.push("genre = ?");
+        queryParams.push(currentGenreFilter);
     }
 
     if (currentSearchQuery && currentSearchQuery !== '') {
-        const queryLower = currentSearchQuery.toLowerCase();
-        filteredSongs = filteredSongs.filter(song =>
-            song.title.toLowerCase().includes(queryLower) || song.artist.toLowerCase().includes(queryLower)
-        );
+        const searchQueryClause = "(title LIKE '%' || ? || '%' OR artist LIKE '%' || ? || '%')";
+        whereClauses.push(searchQueryClause);
+        queryParams.push(currentSearchQuery, currentSearchQuery); // Parameter for both title and artist
     }
 
     if (currentSortBy !== 'default') {
-        filteredSongs.sort((a, b) => {
-            let valueA = a[currentSortBy];
-            let valueB = b[currentSortBy];
-
-            if (typeof valueA === 'string') valueA = valueA.toLowerCase();
-            if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+        sqlQuery += ` ORDER BY ${currentSortBy}`;
+    }
 
 
-            if (valueA < valueB) return -1;
-            if (valueA > valueB) return 1;
-            return 0;
-        });
+    try {
+        const results = db.exec(sqlQuery, queryParams);
+        if (results.length > 0 && results[0].values) {
+            filteredSongs = results[0].values.map(row => {
+                const song = {};
+                results[0].columns.forEach((column, index) => {
+                    song[column] = row[index];
+                });
+                return song;
+            });
+        }
+    } catch (dbError) {
+        console.error("Database query error:", dbError, sqlQuery, queryParams);
+        alert('Error fetching songs from database.');
+        return []; // Return empty array in case of error
     }
 
     return filteredSongs;
 }
+
+
+// Function to initially load songs from the database when the page loads
+function loadSongsFromDatabase() {
+    songs = getFilteredAndSortedSongsFromDatabase(); // Load all songs initially
+    localStorage.setItem('songs', JSON.stringify(songs)); // Update localStorage for compatibility (TEMPORARY - consider removing later)
+    loadSongsForPage(currentPage); // Load songs for the current page
+    loadPopularSongs();
+    loadRecentSongs();
+}
+
+
+// Modify loadInitialData to load initial songs into SQL.js (if you have any starter songs)
+function loadInitialData() {
+    console.log("Loading initial data into SQL.js database.");
+
+    // **Example: Insert some initial songs (replace with your actual data)**
+    const initialSongs = [
+        { title: "Song One", artist: "Artist A", genre: "Pop", audioSrc: "placeholder1", uploadedBy: "company1@example.com" },
+        { title: "Song Two", artist: "Artist B", genre: "Rock", audioSrc: "placeholder2", uploadedBy: "company2@example.com" },
+        { title: "Song Three", artist: "Artist C", genre: "Jazz", audioSrc: "placeholder3", uploadedBy: "company1@example.com" }
+    ];
+
+    try {
+        initialSongs.forEach(song => {
+            db.run(`
+                INSERT INTO app_songs (title, artist, genre, audioSrc, uploadedBy)
+                VALUES (?, ?, ?, ?, ?)
+            `, [song.title, song.artist, song.genre, song.audioSrc, song.uploadedBy]);
+        });
+        console.log("Initial songs loaded into database.");
+        loadSongsFromDatabase(); // Load songs from database to populate UI after initial data load
+
+    } catch (dbError) {
+        console.error("Error loading initial songs into database:", dbError);
+    }
+
+    // ... (rest of your loadInitialData function if you have other initial data to load) ...
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    initDBAndLoad();
+});
+
+
+// ... (rest of your script.js code - other functions like createSongItemElement, playSong, pagination, filters, sorts, admin functions, profile functions, etc. - these will mostly remain the same as they work with the `songs` array, which is now populated from the SQL.js database) ...
 
 
 function createSongItemElement(song) {
@@ -422,14 +491,14 @@ function playSong(song) {
 
 // Pagination Functions
 function updatePaginationButtons() {
-    const totalPages = Math.ceil(getFilteredAndSortedSongs().length / SONGS_PER_PAGE) || 1;
+    const totalPages = Math.ceil(getFilteredAndSortedSongsFromDatabase().length / SONGS_PER_PAGE) || 1;
     document.getElementById('page-number').textContent = `Page ${currentPage} of ${totalPages}`;
     document.getElementById('prev-page').disabled = currentPage <= 1;
     document.getElementById('next-page').disabled = currentPage >= totalPages;
 }
 
 function updatePageNumberDisplay() {
-    const totalPages = Math.ceil(getFilteredAndSortedSongs().length / SONGS_PER_PAGE) || 1;
+    const totalPages = Math.ceil(getFilteredAndSortedSongsFromDatabase().length / SONGS_PER_PAGE) || 1;
     document.getElementById('page-number').textContent = `Page ${currentPage} of ${totalPages}`;
 }
 
@@ -442,7 +511,7 @@ function prevPage() {
 }
 
 function nextPage() {
-    const totalPages = Math.ceil(getFilteredAndSortedSongs().length / SONGS_PER_PAGE) || 1;
+    const totalPages = Math.ceil(getFilteredAndSortedSongsFromDatabase().length / SONGS_PER_PAGE) || 1;
     if (currentPage < totalPages) {
         currentPage++;
         loadSongsForPage(currentPage);
@@ -479,8 +548,10 @@ function loadPopularSongs() {
     const popularSongListDiv = document.getElementById('popular-song-list');
     popularSongListDiv.innerHTML = '';
 
+    // Re-calculate popularity based on liked songs from localStorage (for now, consider migrating liked songs to DB later)
     const songPopularity = {};
-    songs.forEach(song => {
+    const currentSongs = getFilteredAndSortedSongsFromDatabase(); // Get songs from DB
+    currentSongs.forEach(song => {
         songPopularity[song.id] = 0;
         users.forEach(user => {
             const userLikedSongs = JSON.parse(localStorage.getItem('likedSongs-' + user.email) || '[]');
@@ -490,7 +561,8 @@ function loadPopularSongs() {
         });
     });
 
-    const sortedSongs = [...songs].sort((a, b) => songPopularity[b.id] - songPopularity[a.id]);
+
+    const sortedSongs = [...currentSongs].sort((a, b) => songPopularity[b.id] - songPopularity[a.id]);
     const popularSongsToShow = sortedSongs.slice(0, 5);
 
     if (popularSongsToShow.length === 0) {
@@ -523,7 +595,8 @@ function loadRecentSongs() {
     const recentSongListDiv = document.getElementById('recent-song-list');
     recentSongListDiv.innerHTML = '';
 
-    const recentSongs = [...songs].sort((a, b) => b.id - a.id);
+    const currentSongs = getFilteredAndSortedSongsFromDatabase(); // Get songs from DB
+    const recentSongs = [...currentSongs].sort((a, b) => b.id - a.id);
     const recentSongsToShow = recentSongs.slice(0, 5);
 
     if (recentSongsToShow.length === 0) {
@@ -605,7 +678,7 @@ function updateLikedSongsInProfile() {
         return;
     }
 
-    const likedSongDetails = songs.filter(song => likedSongs.includes(song.id));
+    const likedSongDetails = songs.filter(song => likedSongs.includes(song.id)); // Still using songs from localStorage for liked songs (migration needed)
     likedSongDetails.forEach(song => {
         const songItem = createLikedSongItemElement(song);
         likedSongListDiv.appendChild(songItem);
@@ -650,7 +723,17 @@ function showCompanyProfilePage(companyName) {
 
     const company = getCompanyByName(companyName);
     if (company) {
-        const companySongsCount = songs.filter(song => song.uploadedBy === company.email).length;
+        // Count company songs from database
+        let companySongsCount = 0;
+        try {
+            const results = db.exec("SELECT COUNT(*) AS songCount FROM app_songs WHERE uploadedBy = ?", [company.email]);
+            if (results.length > 0 && results[0].values.length > 0) {
+                companySongsCount = results[0].values[0][0]; // Get the count from the query result
+            }
+        } catch (dbError) {
+            console.error("Database error fetching company song count:", dbError);
+        }
+
         companySongCountDisplay.textContent = `Songs uploaded: ${companySongsCount}`;
     } else {
         companySongCountDisplay.textContent = 'Company profile not found.';
@@ -670,7 +753,7 @@ function getCompanyByEmail(email) {
 }
 
 
-// Admin Panel Functions - (Keep Admin Panel Functions from previous response)
+// Admin Panel Functions - (Keep Admin Panel Functions from previous response - adapt to DB later)
 // Load Pending Companies for Admin Approval
 function loadPendingCompanies() {
     const pendingCompanyListDiv = document.getElementById('pending-company-list');
@@ -727,12 +810,14 @@ function loadAdminSongs() {
     const adminSongListDiv = document.getElementById('admin-song-list');
     adminSongListDiv.innerHTML = '';
 
-    if (songs.length === 0) {
+    const adminSongs = getFilteredAndSortedSongsFromDatabase(); // Load from DB
+
+    if (adminSongs.length === 0) {
         adminSongListDiv.innerHTML = '<p>No songs available.</p>';
         return;
     }
 
-    songs.forEach(song => {
+    adminSongs.forEach(song => {
         const songItem = document.createElement('div');
         songItem.classList.add('song-item');
         songItem.innerHTML = `
@@ -746,11 +831,16 @@ function loadAdminSongs() {
 }
 
 function deleteSong(songId) {
-    songs = songs.filter(song => song.id !== songId);
-    localStorage.setItem('songs', JSON.stringify(songs));
-    loadAdminSongs();
-    loadSongsForPage(currentPage);
-    alert('Song deleted.');
+    try {
+        db.run("DELETE FROM app_songs WHERE id = ?", [songId]);
+        console.log(`Song with ID ${songId} deleted from database.`);
+        loadAdminSongs(); // Reload admin song list from DB
+        loadSongsForPage(currentPage); // Reload song list for listener view
+        alert('Song deleted.');
+    } catch (dbError) {
+        console.error('Database error deleting song:', dbError);
+        alert('Error deleting song from database.');
+    }
 }
 
 
@@ -786,7 +876,7 @@ function deleteUser(userEmail) {
         alert('Admin cannot delete their own account via this panel.');
         return;
     }
-    users = users.filter(user => user.email !== userEmail);
+    users = users.filter(user => user.email !== userEmail); // Still using localStorage users for simplicity
     localStorage.setItem('users', JSON.stringify(users));
     loadAdminUsers();
     alert(`User ${userEmail} deleted.`);
@@ -823,10 +913,18 @@ function loadAdminCompanies() {
 
 
 function deleteCompanyAdminPanel(companyEmail) {
-    users = users.filter(user => user.email !== companyEmail);
-    songs = songs.filter(song => song.uploadedBy !== companyEmail);
+    users = users.filter(user => user.email !== companyEmail); // Still using localStorage users
     localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('songs', JSON.stringify(songs));
+
+    // Delete company's songs from database
+    try {
+        db.run("DELETE FROM app_songs WHERE uploadedBy = ?", [companyEmail]);
+        console.log(`Songs for company ${companyEmail} deleted from database.`);
+    } catch (dbError) {
+        console.error("Database error deleting company songs:", dbError);
+        alert('Error deleting company songs from database.');
+    }
+
     loadAdminCompanies();
     loadAdminSongs();
     loadSongsForPage(currentPage);
@@ -877,17 +975,17 @@ document.getElementById('create-artist-profile-form').addEventListener('submit',
         bio: artistBio,
         companyUsername: loggedInUserEmail
     };
-    artistProfiles.push(newProfile);
+    artistProfiles.push(newProfile); // Still using localStorage artistProfiles for simplicity
     localStorage.setItem('artistProfiles', JSON.stringify(artistProfiles));
     loadCompanyArtistProfiles();
     showCompanySection('artist-profiles');
     alert('Artist profile created!');
     document.getElementById('create-artist-profile-form').reset();
-});
+}
 
 
 function deleteArtistProfile(profileId) {
-    artistProfiles = artistProfiles.filter(profile => profile.id !== profileId);
+    artistProfiles = artistProfiles.filter(profile => profile.id !== profileId); // Still using localStorage artistProfiles
     localStorage.setItem('artistProfiles', JSON.stringify(artistProfiles));
     loadCompanyArtistProfiles();
     alert('Artist profile deleted.');
@@ -934,7 +1032,7 @@ function rejectArtistProfileRequest(requestId) {
 
 
 function updateArtistProfileRequestStatus(requestId, status) {
-    artistProfileRequests = artistProfileRequests.map(request => {
+    artistProfileRequests = artistProfileRequests.map(request => { // Still using localStorage artistProfileRequests
         if (request.id === requestId) {
             request.status = status;
         }
@@ -968,18 +1066,19 @@ function requestArtistProfileClaim(artistName) {
         companyUsernameToReview: companyToReview.email,
         status: 'pending'
     };
-    artistProfileRequests.push(newRequest);
+    artistProfileRequests.push(newRequest); // Still using localStorage artistProfileRequests
     localStorage.setItem('artistProfileRequests', JSON.stringify(artistProfileRequests));
     alert(`Artist profile request for "${artistName}" submitted. It is being reviewed by a distribution company.`);
 }
 
 
-// SQL.js Database Initialization (Client-Side) - Added after your provided code
-const SQL = require('sql.js'); // Assuming you are using a module bundler like webpack or Parcel
+// SQL.js Database Initialization and Schema Setup
+async function initSqlJs(config) {
+    const sqljs = await initSqlJsModule(config);
+    return new sqljs.Database();
+}
 
-let db = new SQL.Database();
 
-// Function to initialize database schema (tables) - Placeholder for now
 function initDatabaseSchema() {
     // Example table creation (adapt to your needs)
     db.run("CREATE TABLE IF NOT EXISTS app_songs (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, artist TEXT, genre TEXT, audioSrc TEXT, uploadedBy TEXT)");
@@ -990,41 +1089,30 @@ function initDatabaseSchema() {
     console.log("Database schema initialized.");
 }
 
+
 // Function to load initial data (if needed) - Placeholder for now
 function loadInitialData() {
-    console.log("Loading initial data from JSON or other sources (placeholder).");
-    // In a real implementation, you would fetch JSON data (e.g., from GitHub Pages hosted JSON files)
-    // and insert it into the SQL.js database tables using db.run() or db.exec()
-}
+    console.log("Loading initial data into SQL.js database.");
 
+    // **Example: Insert some initial songs (replace with your actual data)**
+    const initialSongs = [
+        { title: "Song One", artist: "Artist A", genre: "Pop", audioSrc: "placeholder1", uploadedBy: "company1@example.com" },
+        { title: "Song Two", artist: "Artist B", genre: "Rock", audioSrc: "placeholder2", uploadedBy: "company2@example.com" },
+        { title: "Song Three", artist: "Artist C", genre: "Jazz", audioSrc: "placeholder3", uploadedBy: "company1@example.com" }
+    ];
 
-// Example of a function to query the database (just for demonstration)
-function exampleQuery() {
     try {
-        const results = db.exec("SELECT * FROM app_songs LIMIT 5"); // Example query
+        initialSongs.forEach(song => {
+            db.run(`
+                INSERT INTO app_songs (title, artist, genre, audioSrc, uploadedBy)
+                VALUES (?, ?, ?, ?, ?)
+            `, [song.title, song.artist, song.genre, song.audioSrc, song.uploadedBy]);
+        });
+        console.log("Initial songs loaded into database.");
+        loadSongsFromDatabase(); // Load songs from database to populate UI after initial data load
 
-        if (results.length > 0) {
-            console.log("Example Query Results:", results[0].columns); // Column names
-            console.log("Example Query Results:", results[0].values);  // Rows of data
-        } else {
-            console.log("No songs found in the database yet.");
-        }
-
-    } catch (err) {
-        console.error("Database query error:", err);
+    } catch (dbError) {
+        console.error("Error loading initial songs into database:", dbError);
     }
-}
 
-
-document.addEventListener('DOMContentLoaded', () => {
-    initDatabaseSchema(); // Initialize database on page load
-    loadInitialData();    // Load initial data (if any)
-    exampleQuery();       // Example query execution (for demonstration)
-
-    updateNavigation();
-    loadSongsForPage(currentPage);
-    loadPopularSongs();
-    loadRecentSongs();
-    showSection('register-listener');
-    updatePaginationButtons();
-});
+    // ... (rest of your loadInitialData function if you 
