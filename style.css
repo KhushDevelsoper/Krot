@@ -1,8 +1,8 @@
 /* style.css */
 
-main > section {
-    display: block !important; /* Force all main sections to be visible */
-}
+/*main > section {
+    display: block !important; 
+}*/
 
 body {
     font-family: Arial, sans-serif;
