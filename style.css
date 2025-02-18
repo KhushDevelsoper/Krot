@@ -1,478 +1,261 @@
-/* style.css */
-
-/*main > section {
-    display: block !important; 
-}*/
-
+/* Reset and General Styles */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f4f4f4;
     color: #333;
-    line-height: 1.6; /* Improved line height for readability */
+    line-height: 1.6;
 }
 
-header {
+header, footer {
     background-color: #333;
-    color: white;
-    padding: 1.5em 0; /* Slightly larger header padding */
+    color: #fff;
+    padding: 1em 0;
     text-align: center;
-    border-bottom: 3px solid #555; /* Added border for visual separation */
-}
-
-header h1 {
-    margin: 0;
-    font-size: 2em; /* Slightly larger header font */
-}
-
-nav {
-    margin-top: 1em; /* Space between header title and nav */
 }
 
 nav ul {
     padding: 0;
+    margin: 0;
     list-style: none;
 }
 
 nav ul li {
     display: inline;
-    margin: 0 20px; /* Increased nav item spacing */
+    margin: 0 15px;
 }
 
 nav ul li a {
-    color: white;
+    color: #fff;
     text-decoration: none;
-    font-size: 1.1em; /* Slightly larger nav font */
-    transition: color 0.3s ease; /* Smooth color transition on hover */
-}
-
-nav ul li a:hover {
-    color: #ddd; /* Lighter color on hover */
 }
 
 main {
-    padding: 25px; /* Slightly larger main padding */
-    text-align: center;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
+section {
+    padding: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+section:last-child {
+    border-bottom: none;
+}
+
+h2, h3 {
+    color: #555;
+    margin-top: 0;
+}
+
+/* Auth Sections (Register, Login) */
 .auth-section {
-    max-width: 450px; /* Slightly wider auth sections */
-    margin: 30px auto; /* Increased margin */
-    padding: 25px; /* Increased padding */
-    background-color: white;
-    border-radius: 10px; /* More rounded corners */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* Stronger shadow */
-    text-align: left;
-    border-top: 5px solid #333; /* Added top border highlight */
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
 }
 
 .auth-section h2 {
-    margin-top: 0;
     text-align: center;
-    color: #333; /* Darker section title */
-    margin-bottom: 1.2em; /* Increased bottom margin for title */
 }
 
 .auth-section form {
     display: flex;
     flex-direction: column;
+    gap: 10px;
 }
 
-.auth-section input, .auth-section select, .auth-section textarea {
-    margin-bottom: 15px; /* Increased input spacing */
-    padding: 10px; /* Increased input padding */
-    border: 1px solid #ccc; /* Slightly darker border */
-    border-radius: 5px; /* More rounded input corners */
-    font-size: 1em; /* Input font size */
-}
-
-.auth-section button {
-    padding: 12px 20px; /* Larger button padding */
-    border: none;
-    border-radius: 5px; /* Rounded button corners */
-    background-color: #333;
-    color: white;
-    cursor: pointer;
-    font-size: 1.1em; /* Button font size */
-    transition: background-color 0.3s ease; /* Button hover transition */
-}
-
-.auth-section button:hover {
-    background-color: #555; /* Darker button on hover */
-}
-
-#song-search {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 25px; /* Increased search margin */
-}
-
-#song-search input[type="text"] {
-    padding: 10px; /* Increased search input padding */
+.auth-section input, .auth-section button, .auth-section select {
+    padding: 10px;
+    margin-bottom: 10px;
     border: 1px solid #ccc;
-    border-radius: 5px 0 0 5px; /* More rounded search input corners */
-    border-right: none;
-    width: 400px; /* Wider search input */
+    border-radius: 4px;
     font-size: 1em;
 }
 
-#song-search button {
-    padding: 10px 20px; /* Larger search button padding */
-    border: 1px solid #333;
-    border-radius: 0 5px 5px 0; /* More rounded search button corners */
-    background-color: #333;
+.auth-section button {
+    background-color: #5cb85c; /* Green Bootstrap success color */
     color: white;
+    border: none;
     cursor: pointer;
-    font-size: 1.1em; /* Search button font size */
-    transition: background-color 0.3s ease;
 }
 
-#song-search button:hover {
-    background-color: #555;
+.auth-section button:hover {
+    background-color: #4cae4c;
 }
 
-#song-list {
+/* Songs Section */
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.controls input[type="text"] {
+    flex-grow: 2; /* Allow search input to take more space */
+    padding: 10px;
+}
+
+.controls select {
+    padding: 10px;
+}
+
+.song-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Even wider song items */
-    gap: 25px; /* Increased song item spacing */
-    margin-top: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Responsive grid */
+    gap: 20px;
 }
 
 .song-item {
-    background-color: white;
-    padding: 20px; /* Increased song item padding */
-    border-radius: 10px; /* More rounded song item corners */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Stronger song item shadow */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    background-color: #f9f9f9;
     cursor: pointer;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.2s ease-in-out; /* Hover effect */
+    transition: transform 0.2s;
 }
 
 .song-item:hover {
-    transform: scale(1.03); /* Slight scale up on hover */
+    transform: scale(1.02);
+    background-color: #eee;
 }
 
 .song-item h3 {
     margin-top: 0;
-    margin-bottom: 8px; /* Increased spacing below song title */
-    font-size: 1.2em; /* Larger song title font */
-    color: #333;
+    margin-bottom: 5px;
 }
 
 .song-item p {
-    margin: 0;
-    color: #555; /* Slightly darker song details */
-    font-size: 0.95em; /* Slightly larger details font */
+    margin: 5px 0;
 }
 
-.song-item .song-details {
-    margin-top: 15px; /* Increased spacing above song details */
-    border-top: 2px solid #eee; /* Thicker separator */
-    padding-top: 10px; /* Increased padding above details */
+.song-details {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
 }
 
-.song-item .like-button {
-    margin-top: 15px;
-    padding: 8px 15px;
+.like-button {
+    background-color: #007bff; /* Blue Bootstrap primary color */
+    color: white;
     border: none;
-    border-radius: 5px;
-    background-color: #007bff; /* Blue like button */
-    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9em;
-    align-self: flex-start; /* Align like button to start */
-    transition: background-color 0.3s ease;
-}
-
-.song-item .like-button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
-}
-
-.song-item .like-button.liked {
-    background-color: #6c757d; /* Grey liked button */
-}
-
-.song-item .like-button.liked:hover {
-    background-color: #5a6268;
-}
-
-
-footer {
-    background-color: #333;
-    color: white;
-    text-align: center;
-    padding: 1.2em 0; /* Footer padding */
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    border-top: 3px solid #555; /* Added top border for footer */
-    font-size: 0.9em; /* Footer font size */
-}
-
-/* Song Section Enhancements Styling */
-#song-filter-sort {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px; /* Increased filter/sort margin */
-    flex-wrap: wrap;
-}
-
-#song-search {
-    display: flex;
-}
-
-#song-filters {
-    display: flex;
-    align-items: center;
     margin-top: 10px;
 }
 
-#song-filters select {
-    margin-left: 15px; /* Increased filter select margin */
-    padding: 10px; /* Increased filter select padding */
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 1em;
+.like-button:hover {
+    background-color: #0056b3;
 }
 
-#pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 25px; /* Increased pagination margin */
+.pagination {
+    text-align: center;
+    margin-top: 20px;
 }
 
-#pagination button {
-    padding: 10px 20px; /* Larger pagination button padding */
-    margin: 0 8px; /* Increased pagination button margin */
-    border: 1px solid #333;
-    border-radius: 5px;
-    background-color: white;
-    color: #333;
+.pagination button {
+    padding: 8px 15px;
+    margin: 0 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
-#pagination button:hover {
-    background-color: #333;
-    color: white;
-}
-
-#pagination button:disabled {
-    background-color: #eee;
-    color: #777;
+.pagination button:disabled {
+    opacity: 0.5;
     cursor: default;
-    border-color: #eee;
+}
+
+.popular-recent-songs {
+    display: flex;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.popular-songs, .recent-songs {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
 }
 
 #audio-player-container {
-    margin-top: 25px; /* Increased audio player margin */
-    padding: 15px; /* Increased audio player padding */
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    text-align: left;
-}
-
-#current-song-info {
-    margin-top: 8px; /* Increased current song info margin */
-    font-size: 0.9em;
-    color: #777;
-}
-
-#popular-songs, #recent-songs {
-    background-color: white;
-    padding: 25px; /* Increased popular/recent songs padding */
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1); /* Stronger shadow */
-    text-align: left;
-    margin-top: 30px; /* Increased top margin */
-}
-
-#popular-songs h3, #recent-songs h3 {
-    margin-top: 0;
-    margin-bottom: 15px; /* Spacing below popular/recent titles */
-    color: #333;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #eee;
+    padding: 10px;
     text-align: center;
+    border-top: 1px solid #ddd;
 }
 
-#popular-song-list, #recent-song-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Wider popular/recent song items */
+/* Admin and Company Dashboard Styles - Adjust as needed */
+#admin-content, #company-content {
+    display: flex;
+    flex-direction: column;
     gap: 20px;
-    margin-top: 20px;
 }
 
-/* Profile Section Styling */
-#profile #user-profile-details, #profile #liked-songs-section {
-    margin-top: 30px; /* Increased profile section margin */
-    padding: 25px; /* Increased profile section padding */
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1); /* Stronger shadow */
-    text-align: left;
-    border-top: 5px solid #333;
-}
-
-#profile #user-profile-details p {
-    font-size: 1.1em; /* Larger profile detail font */
-    margin-bottom: 10px;
-}
-
-#profile #liked-songs-section h3 {
-    text-align: center;
-    margin-top: 0;
+#admin-content nav, #company-content nav {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
     margin-bottom: 15px;
-    color: #333;
 }
 
-#profile #liked-song-list {
-    margin-top: 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Wider liked song items */
-    gap: 20px;
-}
-
-/* Artist/Company Profile Page Styling */
-#artist-profile-page, #company-profile-page {
-    max-width: 900px; /* Wider profile pages */
-    margin: 30px auto;
-    padding: 30px; /* Increased profile page padding */
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1); /* Stronger shadow */
-    text-align: left;
-    border-top: 5px solid #333;
-}
-
-#artist-profile-bio-display, #company-profile-song-count {
-    margin-top: 20px;
-    padding-top: 15px; /* Increased bio/song count padding */
-    border-top: 2px solid #eee; /* Thicker separator */
-    font-size: 1.05em; /* Slightly larger bio/count font */
-}
-
-#artist-profile-name-display, #company-profile-name-display {
-    text-align: center;
-    margin-bottom: 20px;
-    font-size: 1.8em; /* Larger profile name font */
-    color: #333;
-}
-
-/* Company Dashboard Styles */
-#company-dashboard #company-actions {
-    margin-bottom: 25px; /* Increased company dashboard actions margin */
-    text-align: center; /* Center align company actions buttons */
-}
-
-#company-dashboard #company-actions button {
-    padding: 12px 20px; /* Larger company dashboard action button padding */
-    margin: 0 12px; /* Increased company dashboard action button margin */
-    border: none;
-    border-radius: 5px;
-    background-color: #333;
-    color: white;
+#admin-content nav button, #company-content nav button {
+    padding: 10px 15px;
     cursor: pointer;
-    font-size: 1.1em;
-    transition: background-color 0.3s ease;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f4f4f4;
 }
 
-#company-dashboard #company-actions button:hover {
-    background-color: #555;
-}
-
-#company-dashboard #company-content > section {
-    margin-top: 25px; /* Increased company dashboard content section margin */
-    padding: 25px; /* Increased company dashboard content section padding */
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1); /* Stronger shadow */
-    text-align: left;
-    border-top: 5px solid #333;
-}
-
-#company-dashboard h3, #admin h3 {
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 1.5em;
-    color: #333;
-    font-size: 1.6em; /* Larger dashboard/admin section titles */
-}
-
-/* Admin Panel Styles */
-#admin #admin-actions {
-    margin-bottom: 25px; /* Increased admin actions margin */
-    text-align: center; /* Center align admin actions buttons */
-}
-
-#admin #admin-actions button {
-    padding: 12px 20px; /* Larger admin action button padding */
-    margin: 0 12px; /* Increased admin action button margin */
-    border: none;
-    border-radius: 5px;
-    background-color: #333;
-    color: white;
-    cursor: pointer;
-    font-size: 1.1em;
-    transition: background-color 0.3s ease;
-}
-
-#admin #admin-actions button:hover {
-    background-color: #555;
-}
-
-#admin #admin-content > section {
-    margin-top: 25px; /* Increased admin content section margin */
-    padding: 25px; /* Increased admin content section padding */
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.1); /* Stronger shadow */
-    border-top: 5px solid #333;
-}
-
-#pending-company-list .company-item, #admin-user-list .company-item, #admin-company-list .company-item {
-    background-color: white;
-    padding: 20px; /* Increased company item padding in admin/pending lists */
-    border-radius: 10px; /* More rounded corners */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    margin-bottom: 15px; /* Increased spacing between company items */
+#admin-pending-companies .company-item, #admin-song-list .song-item, #admin-user-list .company-item, #admin-company-list .company-item,
+#company-artist-profile-requests .company-item, #company-artist-profiles .song-item, #company-artist-profile-request-list .company-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
 }
 
-.company-item .company-details {
-    text-align: left;
+#admin-pending-companies .company-item:last-child, #admin-song-list .song-item:last-child, #admin-user-list .company-item:last-child, #admin-company-list .company-item:last-child,
+#company-artist-profile-requests .company-item:last-child, #company-artist-profiles .song-item:last-child, #company-artist-profile-request-list .company-item:last-child {
+    border-bottom: none;
 }
 
-.company-item .company-details h3 {
-    margin-bottom: 5px;
-    font-size: 1.2em;
+.company-details {
+    flex-grow: 1;
 }
 
-.company-item .company-actions button {
-    padding: 10px 15px;
-    margin-left: 8px; /* Increased spacing between action buttons */
-    border: none;
-    border-radius: 5px;
-    background-color: #4CAF50; /* Green for Approve */
-    color: white;
+.company-actions button {
+    padding: 8px 12px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    border-radius: 4px;
+    border: none;
+    background-color: #5cb85c;
+    color: white;
+    margin-left: 10px;
 }
 
-.company-item .company-actions button:hover {
-    background-color: #45a049; /* Darker green on hover */
+.company-actions button.reject {
+    background-color: #d9534f; /* Red Bootstrap danger color */
 }
 
-.company-item .company-actions button.reject {
-    background-color: #f44336; /* Red for Reject */
+/* Profile Section */
+#profile section {
+    border: none; /* remove border from profile sections if needed */
 }
-
-.company-item .company-actions button.reject:hover {
-    background-color: #da190b; /* Darker red on hover */
-    }
