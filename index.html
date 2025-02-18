@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KROT Music Platform</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 </head>
 <body>
     <header>
@@ -81,7 +82,7 @@
                 </div>
             </div>
             <div id="song-list">
-                </div>
+            </div>
             <div id="pagination">
                 <button id="prev-page" disabled onclick="prevPage()">Previous</button>
                 <span id="page-number">Page 1</span>
@@ -89,7 +90,8 @@
             </div>
             <div id="audio-player-container" style="display: none;">
                 <audio id="audio-player" controls></audio>
-                <div id="current-song-info"></div> </div>
+                <div id="current-song-info"></div>
+            </div>
             <div id="popular-songs" style="margin-top: 20px;">
                 <h3>Popular Songs</h3>
                 <div id="popular-song-list"></div>
@@ -134,7 +136,7 @@
                     <h3>Manage Artist Profiles</h3>
                     <button onclick="showCompanySection('create-artist-profile')">Create New Artist Profile</button>
                     <div id="company-artist-profile-list">
-                        </div>
+                    </div>
                 </section>
 
                 <section id="company-create-artist-profile" style="display: none;">
@@ -149,7 +151,7 @@
                 <section id="company-artist-profile-requests" style="display: none;">
                     <h3>Artist Profile Requests</h3>
                     <div id="company-artist-profile-request-list">
-                        </div>
+                    </div>
                 </section>
             </div>
         </section>
@@ -168,25 +170,25 @@
                 <section id="admin-pending-companies" style="display: none;">
                     <h3>Pending Company Registrations</h3>
                     <div id="pending-company-list">
-                        </div>
+                    </div>
                 </section>
 
                 <section id="admin-songs" style="display: none;">
                     <h3>Manage Songs</h3>
                     <div id="admin-song-list">
-                        </div>
+                    </div>
                 </section>
 
                 <section id="admin-users" style="display: none;">
                     <h3>Manage Users (Listeners)</h3>
                     <div id="admin-user-list">
-                        </div>
+                    </div>
                 </section>
 
                 <section id="admin-companies" style="display: none;">
                     <h3>Manage Companies</h3>
                     <div id="admin-company-list">
-                        </div>
+                    </div>
                 </section>
             </div>
         </section>
@@ -220,4 +222,4 @@
 
     <script src="script.js"></script>
 </body>
-    </html>
+</html>
