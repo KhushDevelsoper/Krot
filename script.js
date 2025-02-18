@@ -1126,10 +1126,18 @@ function loadInitialData() {
     }
 
     function showSection(sectionId) {
+    console.log(`showSection called for sectionId: ${sectionId}`); // ADD THIS LINE
     document.querySelectorAll('main > section').forEach(section => {
-        section.style.display = 'none'; // This line hides ALL sections
+        console.log(`  Hiding section: ${section.id}`); // ADD THIS LINE
+        section.style.display = 'none';
     });
-    document.getElementById(sectionId).style.display = 'block'; // This line shows the target section
+    console.log(`  Showing section: ${sectionId}`); // ADD THIS LINE
+    const sectionToShow = document.getElementById(sectionId);
+    if (sectionToShow) { // Make sure the section exists
+        sectionToShow.style.display = 'block';
+    } else {
+        console.warn(`Section with id "${sectionId}" not found!`); // ADD THIS LINE - warning if section ID is wrong
+    }
 
     if (sectionId === 'songs') {
         loadSongsForPage(currentPage);
@@ -1157,5 +1165,4 @@ function loadInitialData() {
         loadUserProfile();
     }
 }
-
     // ... (rest of your loadInitialData function if you 
