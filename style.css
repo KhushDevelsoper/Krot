@@ -1,0 +1,346 @@
+/* style.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 1em 0;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+}
+
+nav ul {
+    padding: 0;
+    list-style: none;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+}
+
+main {
+    padding: 20px;
+    text-align: center;
+}
+
+.auth-section {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: left; /* Align form elements left */
+}
+
+.auth-section h2 {
+    margin-top: 0;
+    text-align: center; /* Center section titles */
+}
+
+.auth-section form {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-section input, .auth-section select, .auth-section textarea {
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.auth-section button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+}
+
+#song-search {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+#song-search input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    border-right: none;
+    width: 300px;
+}
+
+#song-search button {
+    padding: 8px 15px;
+    border: 1px solid #333;
+    border-radius: 0 4px 4px 0;
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+}
+
+
+#song-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Increased min width */
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.song-item {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    cursor: pointer;
+    text-align: left;
+    display: flex; /* Flex layout for song item */
+    flex-direction: column;
+    justify-content: space-between; /* Distribute space between elements */
+}
+
+.song-item h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1.1em; /* Slightly larger song title */
+}
+
+.song-item p {
+    margin: 0;
+    color: #777;
+    font-size: 0.9em; /* Slightly smaller details */
+}
+
+.song-item .song-details {
+    margin-top: 10px;
+    border-top: 1px solid #eee; /* Separator for details */
+    padding-top: 5px;
+}
+
+
+footer {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 1em 0;
+    position: fixed; /* Fixed to bottom */
+    bottom: 0;
+    width: 100%;
+}
+
+/* Song Section Enhancements Styling */
+#song-filter-sort {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap; /* Allow filters to wrap on smaller screens */
+}
+
+#song-search {
+    display: flex;
+}
+
+#song-filters {
+    display: flex;
+    align-items: center;
+    margin-top: 10px; /* Space from search on smaller screens */
+}
+
+#song-filters select {
+    margin-left: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+#pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+#pagination button {
+    padding: 8px 15px;
+    margin: 0 5px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+}
+
+#pagination button:disabled {
+    background-color: #eee;
+    color: #777;
+    cursor: default;
+    border-color: #eee;
+}
+
+#audio-player-container {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+#current-song-info {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: #777;
+}
+
+#popular-songs, #recent-songs {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+#popular-song-list, #recent-song-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+/* Profile Section Styling */
+#profile #user-profile-details, #profile #liked-songs-section {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+#profile #liked-song-list {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+/* Artist/Company Profile Page Styling (Basic) */
+#artist-profile-page, #company-profile-page {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+#artist-profile-bio-display, #company-profile-song-count {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+#artist-profile-name-display, #company-profile-name-display {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* Company Dashboard Styles */
+#company-dashboard #company-actions {
+    margin-bottom: 20px;
+}
+
+#company-dashboard #company-actions button {
+    padding: 10px 15px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+}
+
+#company-dashboard #company-content > section {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+#company-dashboard h3, #admin h3 {
+    text-align: center;
+    margin-top: 0;
+}
+
+/* Admin Panel Styles */
+#admin #admin-actions {
+    margin-bottom: 20px;
+}
+
+#admin #admin-actions button {
+    padding: 10px 15px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+}
+
+#admin #admin-content > section {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#pending-company-list .company-item {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.company-item .company-details {
+    text-align: left;
+}
+
+.company-item .company-actions button {
+    padding: 8px 12px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50; /* Green for Approve */
+    color: white;
+    cursor: pointer;
+}
+
+.company-item .company-actions button.reject {
+    background-color: #f44336; /* Red for Reject */
+}
