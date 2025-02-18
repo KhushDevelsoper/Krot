@@ -1,3 +1,29 @@
+(function() {
+    // Override console.log to use alert (for basic mobile debugging - REMOVE FOR PRODUCTION)
+    const originalConsoleLog = console.log;
+    console.log = function() {
+        let message = Array.from(arguments).join(' ');
+        alert("Console Log: " + message);
+        if (originalConsoleLog) {
+            originalConsoleLog.apply(console, arguments);
+        }
+    };
+    console.warn = function() {
+        let message = Array.from(arguments).join(' ');
+        alert("Console Warn: " + message);
+        if (console.warn) {
+            console.warn.apply(console, arguments);
+        }
+    };
+    console.error = function() {
+        let message = Array.from(arguments).join(' ');
+        alert("Console Error: " + message);
+        if (console.error) {
+            console.error.apply(console, arguments);
+        }
+    };
+})();
+
 // script.js
 
 const ADMIN_USERNAME = "admin@krot.off";
@@ -25,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function initDBAndLoad() {
-    db = await initSqlJs({ wasmUrl: 'sql-wasm.wasm' }); // Adjust path if needed
+    db = await initSqlJs({ wasmUrl: 'https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.wasm' }); // Using CDN for wasmUrl
     initDatabaseSchema();
     loadInitialData(); // This will also load songs from DB and update UI
 
@@ -43,10 +69,18 @@ function isValidEmail(email) {
 
 
 function showSection(sectionId) {
+    console.log(`showSection called for sectionId: ${sectionId}`);
     document.querySelectorAll('main > section').forEach(section => {
+        console.log(`  Hiding section: ${section.id}`);
         section.style.display = 'none';
     });
-    document.getElementById(sectionId).style.display = 'block';
+    console.log(`  Showing section: ${sectionId}`);
+    const sectionToShow = document.getElementById(sectionId);
+    if (sectionToShow) {
+        sectionToShow.style.display = 'block';
+    } else {
+        console.warn(`Section with id "${sectionId}" not found!`);
+    }
 
     if (sectionId === 'songs') {
         loadSongsForPage(currentPage);
@@ -1090,79 +1124,5 @@ function initDatabaseSchema() {
 }
 
 
-// Function to load initial data (if needed) - Placeholder for now
-function loadInitialData() {
-    console.log("Loading initial data into SQL.js database.");
-
-    // **Example: Insert some initial songs (replace with your actual data)**
-    const initialSongs = [
-        { title: "Song One", artist: "Artist A", genre: "Pop", audioSrc: "placeholder1", uploadedBy: "company1@example.com" },
-        { title: "Song Two", artist: "Artist B", genre: "Rock", audioSrc: "placeholder2", uploadedBy: "company2@example.com" },
-        { title: "Song Three", artist: "Artist C", genre: "Jazz", audioSrc: "placeholder3", uploadedBy: "company1@example.com" }
-    ];
-
-    try {
-        initialSongs.forEach(song => {
-            db.run(`
-                INSERT INTO app_songs (title, artist, genre, audioSrc, uploadedBy)
-                VALUES (?, ?, ?, ?, ?)
-            `, [song.title, song.artist, song.genre, song.audioSrc, song.uploadedBy]);
-        });
-        console.log("Initial songs loaded into database.");
-        loadSongsFromDatabase(); // Load songs from database to populate UI after initial data load
-
-    } catch (dbError) {
-        console.error("Error loading initial songs into database:", dbError);
-    }
-
-    async function initDBAndLoad() {
-    db = await initSqlJs({ wasmUrl: 'https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.wasm' }); // Using CDN for wasmUrl
-    initDatabaseSchema();
-    loadInitialData(); // This will also load songs from DB and update UI
-
-    updateNavigation();
-    showSection('register-listener');
-    updatePaginationButtons();
-    }
-
-    function showSection(sectionId) {
-    console.log(`showSection called for sectionId: ${sectionId}`); // ADD THIS LINE
-    document.querySelectorAll('main > section').forEach(section => {
-        console.log(`  Hiding section: ${section.id}`); // ADD THIS LINE
-        section.style.display = 'none';
-    });
-    console.log(`  Showing section: ${sectionId}`); // ADD THIS LINE
-    const sectionToShow = document.getElementById(sectionId);
-    if (sectionToShow) { // Make sure the section exists
-        sectionToShow.style.display = 'block';
-    } else {
-        console.warn(`Section with id "${sectionId}" not found!`); // ADD THIS LINE - warning if section ID is wrong
-    }
-
-    if (sectionId === 'songs') {
-        loadSongsForPage(currentPage);
-    }
-    if (sectionId === 'admin' && userRole !== 'admin') {
-        alert('Admin access only.');
-        showSection('login');
-        return;
-    }
-    if (sectionId === 'company-dashboard' && userRole !== 'company') {
-        alert('Company dashboard access only.');
-        showSection('login');
-        return;
-    }
-    if (sectionId === 'company-dashboard') {
-        showCompanySection('upload-song');
-        loadCompanyArtistProfiles();
-        loadCompanyArtistProfileRequests();
-    }
-    if (sectionId === 'admin') {
-        showAdminSection('pending-companies');
-        loadAdminSongs();
-    }
-    if (sectionId === 'profile') {
-        loadUserProfile();
-    }
-}
-    // ... (rest of your loadInitialData function if you 
+// Function to load initial data (if needed) - P
+   
