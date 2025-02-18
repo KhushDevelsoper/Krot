@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-js@latest/sqlite-js.js"></script>
     <style>
-        /* Inlined CSS - style.css content (same as before, with minor adjustments) */
+        /* Inlined CSS - style.css content */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
@@ -361,6 +361,10 @@
             const registerFormDiv = document.getElementById('register-form');
             const loginFormElement = document.getElementById('login-form-element');
             const registerFormElement = document.getElementById('register-form-element');
+            const loginUsernameInput = document.getElementById('login-username');
+            const loginPasswordInput = document.getElementById('login-password');
+            const registerUsernameInput = document.getElementById('register-username');
+            const registerPasswordInput = document.getElementById('register-password');
             const logoutBtn = document.getElementById('logout-btn');
             const userProfileBtn = document.getElementById('user-profile-btn');
             const userProfileSection = document.getElementById('user-profile-section');
@@ -483,4 +487,607 @@
             logoutBtn.addEventListener('click', () => {
                 currentUser = null;
                 clearLoggedInUser(); // Clear from localStorage
-    
+                updateUIForUser(null);
+                alert('Logged out.');
+            });
+
+            userProfileBtn.addEventListener('click', () => {
+                hideAllSections();
+                userProfileSection.style.display = 'block';
+                if (currentUser) {
+                    profileUsernameSpan.textContent = currentUser.username;
+                    profileRoleSpan.textContent = currentUser.role;
+                } else {
+                    profileUsernameSpan.textContent = 'N/A';
+                    profileRoleSpan.textContent = 'N/A';
+                }
+            });
+
+            createCompanyProfileBtn.addEventListener('click', () => {
+                companyProfileFormDiv.style.display = 'block';
+                createCompanyProfileBtn.style.display = 'none'; // Hide the button
+            });
+
+            cancelCompanyProfileBtn.addEventListener('click', () => {
+                companyProfileFormDiv.style.display = 'none';
+                createCompanyProfileBtn.style.display = 'block'; // Show the button again
+            });
+
+
+            companyProfileFormElement.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const companyName = companyProfileNameInput.value.trim();
+                const companyDescription = companyProfileDescriptionInput.value.trim();
+                if (companyName) {
+                    const success = await submitMusicDistributorProfile(currentUser.id, companyName, companyDescription);
+                    if (success) {
+                        alert('Company profile submitted for review.');
+                        companyProfileFormDiv.style.display = 'none';
+                        createCompanyProfileBtn.style.display = 'block';
+                        companyProfileNameInput.value = '';
+                        companyProfileDescriptionInput.value = '';
+                    } else {
+                        alert('Failed to submit company profile.');
+                    }
+                } else {
+                    alert('Please enter company name.');
+                }
+            });
+
+
+            adminAreaBtn.addEventListener('click', () => {
+                hideAllSections();
+                adminAreaSection.style.display = 'block';
+                loadUnverifiedCompaniesForAdmin();
+                loadPendingCompanyProfilesForAdmin();
+            });
+
+            submitVerifyCompanyBtn.addEventListener('click', async () => {
+                const companyIdToVerify = companyToVerifySelect.value;
+                if (companyIdToVerify) {
+                    await verifyDistributionCompany(companyIdToVerify);
+                    alert(`Company verified.`);
+                    loadUnverifiedCompaniesForAdmin();
+                    loadPendingCompanyProfilesForAdmin(); // Refresh pending profiles too, as approval might affect them.
+                } else {
+                    alert('Please select a company to verify.');
+                }
+            });
+
+            companyAreaBtn.addEventListener('click', () => {
+                hideAllSections();
+                companyAreaSection.style.display = 'block';
+                if (currentUser && currentUser.company_id) { // Make sure company_id exists
+                     loadArtistsForCompany(currentUser.company_id);
+                } else {
+                    companyArtistsList.innerHTML = 'Company artists list is unavailable. ';
+                    if (!currentUser) {
+                         companyArtistsList.innerHTML += 'Please log in as a company user.';
+                    } else if (!currentUser.company_id) {
+                        companyArtistsList.innerHTML += 'Your profile is not associated with a verified company.';
+                    }
+                }
+            });
+
+            addNewArtistBtn.addEventListener('click', () => {
+                addArtistForm.style.display = 'block';
+                addNewArtistBtn.style.display = 'none';
+            });
+
+            submitNewArtistBtn.addEventListener('click', async () => {
+                const artistName = newArtistNameInput.value.trim();
+                if (artistName) {
+                    // Assuming company_id is available for logged in company user
+                    if (currentUser && currentUser.company_id) {
+                         await addNewArtist(currentUser.company_id, artistName);
+                         alert(`Artist "${artistName}" added.`);
+                         newArtistNameInput.value = '';
+                         addArtistForm.style.display = 'none';
+                         addNewArtistBtn.style.display = 'block';
+                         loadArtistsForCompany(currentUser.company_id);
+                    } else {
+                        alert('Could not determine company. Please ensure you are logged in as a company user.');
+                    }
+                } else {
+                    alert('Please enter artist name.');
+                }
+            });
+
+
+            // --- Functions ---
+
+            function hideAllSections() {
+                artistListSection.style.display = 'none';
+                songListSection.style.display = 'none';
+                adminAreaSection.style.display = 'none';
+                companyAreaSection.style.display = 'none';
+                userProfileSection.style.display = 'none';
+                authFormsDiv.style.display = 'none'; // Hide auth forms
+                loginFormDiv.style.display = 'none';
+                registerFormDiv.style.display = 'none';
+                companyProfileFormDiv.style.display = 'none'; // Hide company profile form
+                createCompanyProfileBtn.style.display = 'block'; // Re-show create company profile button
+                addArtistForm.style.display = 'none'; // Ensure artist form is hidden
+                addNewArtistBtn.style.display = 'block'; // Re-show add new artist button
+            }
+
+            async function initDB() {
+                try {
+                    const database = await sqlite3.oo.JsDb.open();
+                    console.log("SQLite database opened.");
+
+                    // Create tables and insert initial data if database is new
+                    await setupDatabase(database);
+                    return database;
+                } catch (e) {
+                    console.error("Database initialization failed:", e);
+                    return null;
+                }
+            }
+
+
+            async function setupDatabase(database) {
+                // Check if tables exist (simple check)
+                const tablesExist = await database.exec({ sql: "SELECT name FROM sqlite_master WHERE type='table' AND name='users';", returnValue: 'exists' });
+                if (tablesExist) {
+                    console.log("Database tables already exist.");
+                    return; // Tables already setup
+                }
+
+                console.log("Creating database tables and inserting initial data...");
+
+                await database.exec(`
+                    CREATE TABLE users (
+                        id TEXT PRIMARY KEY,
+                        username TEXT UNIQUE NOT NULL,
+                        password TEXT NOT NULL, /* In a real app, hash passwords! */
+                        role TEXT NOT NULL DEFAULT 'listener', /* 'listener', 'company', 'admin' */
+                        company_profile_id TEXT, /* Link to company profile if user is company admin */
+                        company_id TEXT /* Link to verified distribution company after admin approval */
+                    );
+
+                    CREATE TABLE distribution_companies (
+                        id TEXT PRIMARY KEY,
+                        name TEXT UNIQUE NOT NULL,
+                        verified INTEGER NOT NULL DEFAULT 0
+                    );
+
+                     CREATE TABLE music_distributor_profiles (
+                        id TEXT PRIMARY KEY,
+                        user_id TEXT NOT NULL, /* User submitting profile */
+                        name TEXT NOT NULL,
+                        description TEXT,
+                        status TEXT NOT NULL DEFAULT 'pending', /* 'pending', 'approved', 'rejected' */
+                        FOREIGN KEY (user_id) REFERENCES users(id),
+                        UNIQUE (user_id) /* One profile per user initially */
+                    );
+
+
+                    CREATE TABLE artists (
+                        id TEXT PRIMARY KEY,
+                        distribution_company_id TEXT,
+                        name TEXT NOT NULL,
+                        bio TEXT,
+                        image_url TEXT,
+                        FOREIGN KEY (distribution_company_id) REFERENCES distribution_companies(id)
+                    );
+
+                    CREATE TABLE songs (
+                        id TEXT PRIMARY KEY,
+                        artist_id TEXT,
+                        title TEXT NOT NULL,
+                        audio_url TEXT NOT NULL,
+                        album_art_url TEXT,
+                        genre TEXT,
+                        FOREIGN KEY (artist_id) REFERENCES artists(id)
+                    );
+                `);
+
+                // Insert initial data (including admin user)
+                await insertInitialData(database);
+            }
+
+            async function insertInitialData(database) {
+                await database.exec({
+                    sql: `
+                        INSERT INTO users (id, username, password, role) VALUES
+                            ('admin-user', 'admin', 'adminpass', 'admin'); /* Default admin - PLEASE CHANGE PASSWORD IN REAL USE */
+
+                        INSERT INTO distribution_companies (id, name, verified) VALUES
+                            ('company1', 'Indie Records Inc.', 1),
+                            ('company2', 'Global Music Group', 0),
+                            ('company3', 'Unverified Records', 0);
+
+                        INSERT INTO artists (id, distribution_company_id, name, bio) VALUES
+                            ('artist1', 'company1', 'Acoustic Soul', 'Emerging indie artist...'),
+                            ('artist2', 'company2', 'Electro Beats', 'High-energy electronic music...'),
+                            ('artist3', 'company1', 'Indie Pop Duo', 'Charming melodies and harmonies.');
+
+                        INSERT INTO songs (id, artist_id, title, audio_url, genre) VALUES
+                            ('song1', 'artist1', 'Whispering Winds', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-1.mp3', 'Indie Folk'),
+                            ('song2', 'artist2', 'Neon City Lights', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-2.mp3', 'Electronic'),
+                            ('song3', 'artist3', 'Sunset Drive', 'https://www.soundhelix.com/mpexamples/mp3/SoundHelix-Song-3.mp3', 'Indie Pop');
+                    `
+                });
+                console.log("Initial data inserted.");
+            }
+
+            async function registerUser(username, password) {
+                try {
+                    const newUserId = 'user-' + Date.now(); // Simple ID
+                    await db.exec({
+                        sql: `INSERT INTO users (id, username, password, role) VALUES ($userId, $username, $password, 'listener')`,
+                        bind: {$userId: newUserId, $username: username, $password: password} // WARNING: plaintext password for demo
+                    });
+                    return true;
+                } catch (error) {
+                    console.error("Registration error:", error);
+                    return false; // Registration failed (e.g., username taken - UNIQUE constraint)
+                }
+            }
+
+            async function loginUser(username, password) {
+                const user = await db.exec({
+                    sql: `SELECT * FROM users WHERE username = $username AND password = $password`, // WARNING: plaintext password check
+                    bind: {$username: username, $password: password},
+                    rowMode: 'object',
+                    returnValue: 'firstRow' // Expecting only one user or null
+                });
+                return user || null; // Return user object or null if not found
+            }
+
+            function saveLoggedInUser(user) {
+                localStorage.setItem('krotMusicCurrentUser', JSON.stringify(user)); // Store in local storage
+            }
+
+            function clearLoggedInUser() {
+                localStorage.removeItem('krotMusicCurrentUser');
+            }
+
+            function getLoggedInUser() {
+                const userJson = localStorage.getItem('krotMusicCurrentUser');
+                return userJson ? JSON.parse(userJson) : null;
+            }
+
+
+            function updateUIForUser(user) {
+                const isLoggedIn = !!user;
+                authButtonsDiv.style.display = isLoggedIn ? 'none' : 'block';
+                logoutBtn.style.display = isLoggedIn ? 'inline-block' : 'none';
+                userProfileBtn.style.display = isLoggedIn ? 'inline-block' : 'none';
+
+                adminAreaBtn.style.display = (isLoggedIn && user.role === 'admin') ? 'inline-block' : 'none';
+                companyAreaBtn.style.display = (isLoggedIn && user.role === 'company') ? 'inline-block' : 'none';
+
+                if (isLoggedIn) {
+                    if (user.role === 'company') {
+                        companyAreaBtn.style.display = 'inline-block'; //Company user sees company area
+                    } else if (user.role === 'admin') {
+                        adminAreaBtn.style.display = 'inline-block'; //Admin sees admin area
+                    }
+                } else {
+                    companyAreaBtn.style.display = 'none';
+                    adminAreaBtn.style.display = 'none';
+                }
+            }
+
+
+            async function loadArtists(searchTerm = '') {
+                artistListDiv.innerHTML = 'Loading artists...';
+                let sql = `SELECT * FROM artists`;
+                let params = {};
+                if (searchTerm) {
+                    sql += ` WHERE name LIKE '%' || $searchTerm || '%'`;
+                    params.$searchTerm = searchTerm;
+                }
+
+                const artists = await db.exec({
+                    sql: sql,
+                    bind: params,
+                    rowMode: 'object'
+                });
+
+                if (!artists || artists.length === 0) {
+                    artistListDiv.innerHTML = 'No artists found.';
+                    return;
+                }
+
+                artistListDiv.innerHTML = '';
+                const ul = document.createElement('ul');
+                artists.forEach(artist => {
+                    const li = document.createElement('li');
+                    const artistButton = document.createElement('button');
+                    artistButton.textContent = artist.name;
+                    artistButton.addEventListener('click', () => loadSongsForArtist(artist.id));
+                    li.appendChild(artistButton);
+                    ul.appendChild(li);
+                });
+                artistListDiv.appendChild(ul);
+            }
+
+            async function loadSongs(searchTerm = '') {
+                songListDiv.innerHTML = 'Loading songs...';
+                let sql = `SELECT songs.*, artists.name as artist_name FROM songs JOIN artists ON songs.artist_id = artists.id`;
+                let params = {};
+                if (searchTerm) {
+                    sql += ` WHERE songs.title LIKE '%' || $searchTerm || '%' OR artists.name LIKE '%' || $searchTerm || '%'`;
+                    params.$searchTerm = searchTerm;
+                }
+
+                const songs = await db.exec({
+                    sql: sql,
+                    bind: params,
+                    rowMode: 'object'
+                });
+
+                if (!songs || songs.length === 0) {
+                    songListDiv.innerHTML = 'No songs found.';
+                    return;
+                }
+
+                songListDiv.innerHTML = '';
+                const ul = document.createElement('ul');
+                songs.forEach(song => {
+                    const li = document.createElement('li');
+                    const songButton = document.createElement('button');
+                    songButton.textContent = `${song.title} - ${song.artist_name}`;
+                    songButton.addEventListener('click', () => playSong(song));
+                    li.appendChild(songButton);
+                    ul.appendChild(li);
+                });
+                songListDiv.appendChild(ul);
+            }
+
+            async function loadSongsForArtist(artistId) {
+                songListDiv.innerHTML = 'Loading songs for artist...';
+                songListSection.style.display = 'block';
+                artistListSection.style.display = 'none';
+
+                const songs = await db.exec({
+                    sql: `SELECT songs.*, artists.name as artist_name FROM songs JOIN artists ON songs.artist_id = artists.id WHERE songs.artist_id = $artistId`,
+                    bind: { $artistId: artistId },
+                    rowMode: 'object'
+                });
+
+                if (!songs || songs.length === 0) {
+                    songListDiv.innerHTML = 'No songs found for this artist.';
+                    return;
+                }
+
+                songListDiv.innerHTML = '';
+                const ul = document.createElement('ul');
+                songs.forEach(song => {
+                    const li = document.createElement('li');
+                    const songButton = document.createElement('button');
+                    songButton.textContent = `${song.title}`;
+                    songButton.addEventListener('click', () => playSong(song));
+                    li.appendChild(songButton);
+                    ul.appendChild(li);
+                });
+                songListDiv.appendChild(ul);
+            }
+
+
+            function playSong(song) {
+                audioPlayer.src = song.audio_url;
+                audioPlayer.play();
+                songTitleDisplay.textContent = song.title;
+                artistNameDisplay.textContent = song.artist_name || 'Unknown Artist';
+                songListSection.style.display = 'block';
+                artistListSection.style.display = 'none';
+            }
+
+            async function loadUnverifiedCompaniesForAdmin() {
+                unverifiedCompaniesList.innerHTML = 'Loading unverified companies...';
+                companyToVerifySelect.innerHTML = '<option value="">Select Company to Verify</option>'; // Reset dropdown
+
+                const companies = await db.exec({
+                    sql: `SELECT * FROM distribution_companies WHERE verified = 0`,
+                    rowMode: 'object'
+                });
+
+                if (!companies || companies.length === 0) {
+                    unverifiedCompaniesList.innerHTML = 'No unverified companies found.';
+                    return;
+                }
+
+                unverifiedCompaniesList.innerHTML = '';
+                companies.forEach(company => {
+                    const li = document.createElement('li');
+                    li.textContent = company.name;
+                    unverifiedCompaniesList.appendChild(li);
+
+                    const option = document.createElement('option');
+                    option.value = company.id;
+                    option.textContent = company.name;
+                    companyToVerifySelect.appendChild(option);
+                });
+            }
+
+            async function verifyDistributionCompany(companyId) {
+                await db.exec({
+                    sql: `UPDATE distribution_companies SET verified = 1 WHERE id = $companyId`,
+                    bind: { $companyId: companyId }
+                });
+                 // After verifying company, update the corresponding user role and company_id
+                 await updateCompanyUserAfterVerification(companyId);
+            }
+
+             async function updateCompanyUserAfterVerification(companyId) {
+                // In real app, you'd likely have a more robust way to link companies and users
+                // Here, we are making a simplification: assuming one user created the pending company profile
+                const profile = await getPendingCompanyProfileByCompanyId(companyId); // Function to get profile by company ID
+                if(profile) {
+                    await db.exec({
+                        sql: `UPDATE users SET role = 'company', company_id = $companyId WHERE id = $userId`,
+                        bind: {$companyId: companyId, $userId: profile.user_id}
+                    });
+                     console.log(`User role and company_id updated for user associated with company ID: ${companyId}`);
+                }
+            }
+
+            async function getPendingCompanyProfileByCompanyId(companyId) {
+                 // Function to get the pending profile associated with a company ID (if needed)
+                // This might need adjustment based on how you are linking profiles and companies
+                // (Current simplification: assuming 1:1 relation via company name for demo data)
+                const company = await db.exec({
+                    sql: `SELECT * FROM distribution_companies WHERE id = $companyId`,
+                    bind: {$companyId: companyId},
+                    rowMode: 'object',
+                    returnValue: 'firstRow'
+                });
+                 if(company) {
+                    const profile = await db.exec({
+                        sql: `SELECT * FROM music_distributor_profiles WHERE name = $companyName AND status = 'pending'`, // Match by name for demo
+                        bind: {$companyName: company.name},
+                        rowMode: 'object',
+                        returnValue: 'firstRow'
+                    });
+                     return profile || null;
+                 }
+                 return null;
+            }
+
+
+            async function loadPendingCompanyProfilesForAdmin() {
+                pendingCompanyProfilesList.innerHTML = 'Loading pending company profiles...';
+
+                const profiles = await db.exec({
+                    sql: `SELECT profile.*, users.username FROM music_distributor_profiles AS profile JOIN users ON profile.user_id = users.id WHERE profile.status = 'pending'`,
+                    rowMode: 'object'
+                });
+
+                if (!profiles || profiles.length === 0) {
+                    pendingCompanyProfilesList.innerHTML = 'No pending company profiles.';
+                    return;
+                }
+
+                pendingCompanyProfilesList.innerHTML = '';
+                profiles.forEach(profile => {
+                    const li = document.createElement('li');
+                    li.textContent = `${profile.name} - Submitted by: ${profile.username}`;
+
+                    const approveButton = document.createElement('button');
+                    approveButton.textContent = 'Approve';
+                    approveButton.addEventListener('click', async () => {
+                        await approveCompanyProfile(profile.id);
+                        loadPendingCompanyProfilesForAdmin(); // Refresh list
+                        loadUnverifiedCompaniesForAdmin(); // Refresh unverified companies list
+                    });
+
+                    const rejectButton = document.createElement('button');
+                    rejectButton.textContent = 'Reject';
+                    rejectButton.addEventListener('click', async () => {
+                        await rejectCompanyProfile(profile.id);
+                        loadPendingCompanyProfilesForAdmin(); // Refresh list
+                    });
+
+                    li.appendChild(approveButton);
+                    li.appendChild(rejectButton);
+                    pendingCompanyProfilesList.appendChild(li);
+                });
+            }
+
+
+            async function approveCompanyProfile(profileId) {
+                await updateCompanyProfileStatus(profileId, 'approved');
+                const profile = await getCompanyProfile(profileId);
+                if (profile) {
+                    await createDistributionCompanyFromProfile(profile); // Create entry in distribution_companies
+                }
+            }
+
+            async function rejectCompanyProfile(profileId) {
+                await updateCompanyProfileStatus(profileId, 'rejected');
+            }
+
+            async function updateCompanyProfileStatus(profileId, status) {
+                 await db.exec({
+                    sql: `UPDATE music_distributor_profiles SET status = $status WHERE id = $profileId`,
+                    bind: {$status: status, $profileId: profileId}
+                });
+            }
+
+            async function getCompanyProfile(profileId) {
+                return await db.exec({
+                    sql: `SELECT * FROM music_distributor_profiles WHERE id = $profileId`,
+                    bind: {$profileId: profileId},
+                    rowMode: 'object',
+                    returnValue: 'firstRow'
+                });
+            }
+
+
+            async function createDistributionCompanyFromProfile(profile) {
+                const newCompanyId = 'company-' + Date.now(); // Simple ID
+                 await db.exec({
+                    sql: `INSERT INTO distribution_companies (id, name, verified) VALUES ($companyId, $companyName, 1)`,
+                    bind: {$companyId: newCompanyId, $companyName: profile.name}
+                });
+                // Update user role and company_id upon company creation and approval
+                 await db.exec({
+                    sql: `UPDATE users SET role = 'company', company_id = $companyId WHERE id = $userId`,
+                    bind: {$companyId: newCompanyId, $userId: profile.user_id}
+                });
+            }
+
+
+            async function submitMusicDistributorProfile(userId, companyName, companyDescription) {
+                try {
+                    const profileId = 'company-profile-' + Date.now();
+                    await db.exec({
+                        sql: `INSERT INTO music_distributor_profiles (id, user_id, name, description, status) VALUES ($profileId, $userId, $companyName, $companyDescription, 'pending')`,
+                        bind: {$profileId: profileId, $userId: userId, $companyName: companyName, $companyDescription: companyDescription}
+                    });
+                    return true;
+                } catch (error) {
+                    console.error("Submit company profile error:", error);
+                    return false; // Submission failed (e.g., duplicate company name - UNIQUE constraint)
+                }
+            }
+
+
+            async function loadArtistsForCompany(companyId) {
+                companyArtistsList.innerHTML = 'Loading artists...';
+
+                const artists = await db.exec({
+                    sql: `SELECT * FROM artists WHERE distribution_company_id = $companyId`,
+                    bind: { $companyId: companyId },
+                    rowMode: 'object'
+                });
+
+                if (!artists || artists.length === 0) {
+                    companyArtistsList.innerHTML = 'No artists found for your company.';
+                    return;
+                }
+
+                companyArtistsList.innerHTML = '';
+                const ul = document.createElement('ul');
+                artists.forEach(artist => {
+                    const li = document.createElement('li');
+                    li.textContent = artist.name;
+                    ul.appendChild(li);
+                });
+                companyArtistsList.appendChild(ul);
+            }
+
+            async function addNewArtist(companyId, artistName) {
+                const newArtistId = 'artist-' + Date.now();
+                await db.exec({
+                    sql: `INSERT INTO artists (id, distribution_company_id, name) VALUES ($artistId, $companyId, $artistName)`,
+                    bind: { $artistId: newArtistId, $companyId: companyId, $artistName: artistName }
+                });
+            }
+
+
+            // --- Initial Setup and "Login" Simulation ---
+            updateUIForUser(currentUser); // Update UI based on login state on page load
+
+            // Initial UI setup - show song list by default
+            browseSongsBtn.click();
+
+        });
+    </script>
+
+</body>
+</html>
