@@ -628,7 +628,7 @@ function createLikedSongItemElement(song) {
 // Artist Profile Page
 
 function showArtistProfilePage(artistName) {
-     const artistProfilePageSection = document.getElementById('artist-profile-page');
+    const artistProfilePageSection = document.getElementById('artist-profile-page');
     const artistNameDisplay = document.getElementById('artist-profile-name-display');
     const artistBioDisplay = document.getElementById('artist-profile-bio-display');
 
@@ -638,6 +638,7 @@ function showArtistProfilePage(artistName) {
 
     showSection('artist-profile-page');
 }
+
 
 // Company Profile Page
 function showCompanyProfilePage(companyName) {
@@ -970,4 +971,60 @@ function requestArtistProfileClaim(artistName) {
     artistProfileRequests.push(newRequest);
     localStorage.setItem('artistProfileRequests', JSON.stringify(artistProfileRequests));
     alert(`Artist profile request for "${artistName}" submitted. It is being reviewed by a distribution company.`);
-                      }
+}
+
+
+// SQL.js Database Initialization (Client-Side) - Added after your provided code
+const SQL = require('sql.js'); // Assuming you are using a module bundler like webpack or Parcel
+
+let db = new SQL.Database();
+
+// Function to initialize database schema (tables) - Placeholder for now
+function initDatabaseSchema() {
+    // Example table creation (adapt to your needs)
+    db.run("CREATE TABLE IF NOT EXISTS app_songs (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, artist TEXT, genre TEXT, audioSrc TEXT, uploadedBy TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS app_users (email TEXT PRIMARY KEY, password TEXT, role TEXT, companyName TEXT, registrationStatus TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS app_artistProfiles (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, bio TEXT, companyUsername TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS app_artistProfileRequests (id INTEGER PRIMARY KEY AUTOINCREMENT, artistNameRequested TEXT, requestingUsername TEXT, companyUsernameToReview TEXT, status TEXT)");
+    db.run("CREATE TABLE IF NOT EXISTS app_likedSongs (userId TEXT, songId INTEGER, PRIMARY KEY (userId, songId))"); // Composite key
+    console.log("Database schema initialized.");
+}
+
+// Function to load initial data (if needed) - Placeholder for now
+function loadInitialData() {
+    console.log("Loading initial data from JSON or other sources (placeholder).");
+    // In a real implementation, you would fetch JSON data (e.g., from GitHub Pages hosted JSON files)
+    // and insert it into the SQL.js database tables using db.run() or db.exec()
+}
+
+
+// Example of a function to query the database (just for demonstration)
+function exampleQuery() {
+    try {
+        const results = db.exec("SELECT * FROM app_songs LIMIT 5"); // Example query
+
+        if (results.length > 0) {
+            console.log("Example Query Results:", results[0].columns); // Column names
+            console.log("Example Query Results:", results[0].values);  // Rows of data
+        } else {
+            console.log("No songs found in the database yet.");
+        }
+
+    } catch (err) {
+        console.error("Database query error:", err);
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    initDatabaseSchema(); // Initialize database on page load
+    loadInitialData();    // Load initial data (if any)
+    exampleQuery();       // Example query execution (for demonstration)
+
+    updateNavigation();
+    loadSongsForPage(currentPage);
+    loadPopularSongs();
+    loadRecentSongs();
+    showSection('register-listener');
+    updatePaginationButtons();
+});
