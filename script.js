@@ -1116,14 +1116,14 @@ function loadInitialData() {
     }
 
     async function initDBAndLoad() {
-    console.log("initDBAndLoad function is being called!"); // <--- Add this line
     db = await initSqlJs({ wasmUrl: 'sql-wasm.wasm' }); // Adjust path if needed
     initDatabaseSchema();
-    loadInitialData();
+    loadInitialData(); // This will also load songs from DB and update UI
+
     updateNavigation();
-    showSection('register-listener'); // <--- This line should show "register-listener" section initially
+    showSection('register-listener');
     updatePaginationButtons();
-    }// This will also load songs from DB and update UI
+    }
 
     function showSection(sectionId) {
     document.querySelectorAll('main > section').forEach(section => {
