@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Entry and Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Entry and Search</h1>
+        <input type="text" id="dataInput" placeholder="Enter data" />
+        <button onclick="addData()">Submit</button>
+        <input type="text" id="searchInput" placeholder="Search data" onkeyup="searchData()" />
+        <ul id="dataList"></ul>
+    </div>
+
+    <script>
+        // Function to add data to local storage
+        function addData() {
+            const input = document.getElementById('dataInput').value;
+            if (input) {
+                let data = JSON.parse(localStorage.getItem('data')) || [];
+                data.push(input);
+                localStorage.setItem('data', JSON.stringify(data));
+                document.getElementById('dataInput').value = '';
+                displayData(data);
+            }
+        }
+
+        // Function to display data
+        function displayData(data) {
+            const list = document.getElementById('dataList');
+            list.innerHTML = '';
+            data.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                list.appendChild(li);
+            });
+        }
+
+        // Function to search data
+        function searchData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const data = JSON.parse(localStorage.getItem('data')) || [];
+            const filteredData = data.filter(item => item.toLowerCase().includes(searchTerm));
+            displayData(filteredData);
+        }
+
+        // Display existing data on page load
+        window.onload = function() {
+            const data = JSON.parse(localStorage.getItem('data')) || [];
+            displayData(data);
+        };
+    </script>
+</body>
+</html>
